@@ -25,7 +25,7 @@ def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT):
 
 def calcubot_eval(inline, expression):
 	try:
-		answer_max_lenght	= 256
+		answer_max_lenght	= 1024
 		expression	= expression.lower()
 		check_result	= check(expression,answer_max_lenght)
 		if check_result=='':
@@ -61,7 +61,7 @@ def calcubot_eval(inline, expression):
 		
 def check(expression,answer_max_lenght):
 	if len(expression)>answer_max_lenght:
-		return 'expression lenght exceeds 128 symbols'
+		return 'expression lenght exceeds '+answer_max_lenght+' symbols'
 	granted_symbols	= "abcdefghijklmnopqrstuvwxyz,.0123456789 ()[]{}:'""+-*/="
 	for ex in [expression[i] for i in range(len(expression))]:
 		if granted_symbols.find(ex)==-1:
