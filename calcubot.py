@@ -3,6 +3,7 @@ import math
 import pandas as pd
 import numpy as np
 from telebot import types
+import re
 
 def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT):
 
@@ -39,9 +40,9 @@ def calcubot_eval(inline, expression):
 					expression + ' = ' + str(res)[:answer_max_lenght],
 					str(res)[:answer_max_lenght]
 				]
-				r0 = types.InlineQueryResultArticle('0', answer[0][:30], types.InputTextMessageContent( answer[0] ))
-				r1 = types.InlineQueryResultArticle('1', answer[1][:30], types.InputTextMessageContent( answer[1] ))
-				r2 = types.InlineQueryResultArticle('2', answer[2][:30], types.InputTextMessageContent( answer[2] ))
+				r0 = types.InlineQueryResultArticle('0', answer[0], types.InputTextMessageContent( answer[0] ))
+				r1 = types.InlineQueryResultArticle('1', answer[1], types.InputTextMessageContent( answer[1] ))
+				r2 = types.InlineQueryResultArticle('2', answer[2], types.InputTextMessageContent( answer[2] ))
 				return [r0,r1,r2]
 			else:
 				return (str(res) + ' = ' + expression)[:answer_max_lenght]
@@ -67,9 +68,19 @@ def check(expression,answer_max_lenght):
 		return 'expression lenght exceeds '+answer_max_lenght+' symbols'
 	
 	not_letters	= ",.0123456789 ()[]{}:'+-*/="+'"'
-	granted_symbols	= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"+not_letters
-	for ex in [expression[i] for i in range(len(expression))]:
-		if granted_symbols.find(ex)==-1:
-			return 'wrong symbol: '+ex
-		
+	letters	= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	granted_symbols	= letters + not_letters
+	for sym in [expression[i] for i in range(len(expression))]:
+		if granted_symbols.find(sym)==-1:
+			return 'wrong symbol: '+sym
+	
+	granted_words = [
+		'math',
+		'pi',
+	]
+	words = re.findall(r'\w+', expression)
+	for expression_word in words:
+		if expression_word not in granted_words:
+			return 'wrong word: '+expression_word			
+	
 	return ''
