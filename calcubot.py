@@ -16,7 +16,7 @@ def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT):
 	calcubot.remove_webhook()
 
 	# Set webhook
-	wh_res = calcubot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH,certificate=ope>
+	wh_res = f37t1_bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH,certificate=open(WEBHOOK_SSL_CERT, 'r'))
 	print('calcubot webhook set',wh_res)
 	print(WEBHOOK_URL_BASE + WEBHOOK_URL_PATH)
 
