@@ -23,5 +23,8 @@ def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT):
 	return calcubot
 
 def calcubot_eval(expression):
-	res = eval(expression)
-	return str(res) + ' = ' + expression
+	try:
+		res = eval(expression)
+		return str(res) + ' = ' + expression
+	except Exception as e:
+		return e
