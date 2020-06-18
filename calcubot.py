@@ -1,7 +1,7 @@
 import telebot
 import math
-import pandas
-import numpy
+import pandas as pd
+import numpy as np
 from telebot import types
 
 def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT):
