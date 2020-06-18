@@ -26,8 +26,8 @@ def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT):
 def calcubot_eval(inline, expression):
 	try:
 		expression	= expression.lower()
-		bad_words	= check(expression)
-		if bad_words=='':
+		check_result	= check(expression)
+		if check_result=='':
 			res = eval(expression)
 
 			if inline:
@@ -44,11 +44,11 @@ def calcubot_eval(inline, expression):
 				return str(res) + ' = ' + expression
 		else:
 			if inline:
-				answer	= ['Wrong symbols: '+bad_words]
+				answer	= [check_result]
 				r0 = types.InlineQueryResultArticle('0', answer[0], types.InputTextMessageContent( answer[0] ))
 				return [r0]
 			else:
-				return 'Wrong symbols: '+bad_words
+				return check_result
 		
 	except Exception as e:
 		
@@ -59,9 +59,11 @@ def calcubot_eval(inline, expression):
 			return e
 		
 def check(expression):
-	granted_symbols	= "abcdefghijklmnopqrstuvwxyz123456789()[]{}'""+-*/="
+	if len(expression)>128:
+		return 'expression lenght exceeds 128 symbols'
+	granted_symbols	= "abcdefghijklmnopqrstuvwxyz123456789 ()[]{}:'""+-*/="
 	for ex in [expression[i] for i in range(len(expression))]:
 		if granted_symbols.find(ex)==-1:
-			return ex
+			return 'wrong symbol: '+ex
 	return ''
 		
