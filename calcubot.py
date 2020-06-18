@@ -25,7 +25,7 @@ def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT):
 
 def calcubot_eval(inline, expression):
 	try:
-		answer_max_lenght	= 1024
+		answer_max_lenght	= 4096
 		expression	= expression.lower()
 		check_result	= check(expression,answer_max_lenght)
 		if check_result=='':
