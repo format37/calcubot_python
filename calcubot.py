@@ -67,7 +67,7 @@ def check(expression,answer_max_lenght):
 	if len(expression)>answer_max_lenght:
 		return 'expression lenght exceeds '+answer_max_lenght+' symbols'
 	
-	not_letters	= ",.0123456789 ()[]{}:'+-*/="+'"'
+	not_letters	= ",.0123456789 ()[]{}:'+-*/\="+'"'
 	letters	= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 	granted_symbols	= letters + not_letters
 	for sym in [expression[i] for i in range(len(expression))]:
