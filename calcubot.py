@@ -60,11 +60,16 @@ def calcubot_eval(inline, expression):
 			return e
 		
 def check(expression,answer_max_lenght):
+	
 	if len(expression)>answer_max_lenght:
 		return 'expression lenght exceeds '+answer_max_lenght+' symbols'
-	granted_symbols	= "abcdefghijklmnopqrstuvwxyz,.0123456789 ()[]{}:'""+-*/="
+	
+	granted_symbols	= "abcdefghijklmnopqrstuvwxyz,.0123456789 ()[]{}:'+-*/="+'"'
 	for ex in [expression[i] for i in range(len(expression))]:
 		if granted_symbols.find(ex)==-1:
 			return 'wrong symbol: '+ex
+	
+	not_letters	= ",.0123456789 ()[]{}:'""+-*/="
+	
 	return ''
 		
