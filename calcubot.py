@@ -73,7 +73,7 @@ def check(expression,answer_max_lenght):
 	for sym in [expression[i] for i in range(len(expression))]:
 		if granted_symbols.find(sym)==-1:
 			return 'wrong symbol: '+sym
-	
+	'''
 	granted_words = [
 		'math',
 		'pi',
@@ -82,5 +82,5 @@ def check(expression,answer_max_lenght):
 	for expression_word in words:
 		if expression_word not in granted_words:
 			return 'wrong word: '+expression_word			
-	
+	'''
 	return ''
