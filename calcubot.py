@@ -28,9 +28,14 @@ def calcubot_eval(inline, expression):
 		res = eval(expression)
 		
 		if inline:
-			r0 = types.InlineQueryResultArticle('0', 'Result0', types.InputTextMessageContent( str(res) + ' = ' + expression ))
-			r1 = types.InlineQueryResultArticle('1', 'Result1', types.InputTextMessageContent( expression + ' = ' + str(res) ))
-			r2 = types.InlineQueryResultArticle('2', 'Result2', types.InputTextMessageContent( str(res) ))
+			answer	= [
+				str(res) + ' = ' + expression,
+				expression + ' = ' + str(res),
+				str(res)
+			]
+			r0 = types.InlineQueryResultArticle('0', answer[0], types.InputTextMessageContent( answer[0] ))
+			r1 = types.InlineQueryResultArticle('1', answer[1], types.InputTextMessageContent( answer[1] ))
+			r2 = types.InlineQueryResultArticle('2', answer[2], types.InputTextMessageContent( answer[2] ))
 			return [r0,r1,r2]
 		else:
 			return str(res) + ' = ' + expression
@@ -38,7 +43,7 @@ def calcubot_eval(inline, expression):
 	except Exception as e:
 		
 		if inline:
-			r = types.InlineQueryResultArticle('0', 'ResultE', types.InputTextMessageContent( e ))
-			return [e]
+			r = types.InlineQueryResultArticle('0', e, types.InputTextMessageContent( e ))
+			return [r]
 		else:
 			return e
