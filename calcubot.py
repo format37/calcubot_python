@@ -27,10 +27,10 @@ def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT):
 
 	return calcubot
 
-def calcubot_eval(inline, expression):
+def calcubot_eval(inline, expression,god_mode):
 	try:
 		answer_max_lenght	= 4096
-		check_result	= check(expression,answer_max_lenght)
+		check_result	= check(expression,answer_max_lenght,god_mode)
 		if check_result=='':
 			res = eval(expression)			
 
@@ -62,10 +62,13 @@ def calcubot_eval(inline, expression):
 		else:
 			return e
 		
-def check(expression,answer_max_lenght):
+def check(expression, answer_max_lenght, god_mode):
 	
 	if len(expression)>answer_max_lenght:
 		return 'expression lenght exceeds '+answer_max_lenght+' symbols'
+	
+	if god_mode:
+		return ''
 	
 	not_letters	= ",.0123456789 ()[]{}:'+-*/\="+'"'
 	letters	= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -77,6 +80,9 @@ def check(expression,answer_max_lenght):
 	granted_words = [
 		'math',
 		'pi',
+		'for',
+		'sin',
+		'cos'
 	]
 	words = re.findall(r'\w+', expression)
 	expression_words=[]
