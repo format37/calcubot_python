@@ -43,7 +43,7 @@ def calcubot_eval(inline, expression):
 	except Exception as e:
 		
 		if inline:
-			r = types.InlineQueryResultArticle('0', e, types.InputTextMessageContent( e ))
+			r = types.InlineQueryResultArticle('0', str(e), types.InputTextMessageContent( str(e) ))
 			return [r]
 		else:
 			return e
