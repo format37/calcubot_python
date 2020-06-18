@@ -1,4 +1,5 @@
 import telebot
+from telebot import types
 
 def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT):
 
@@ -22,9 +23,22 @@ def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT):
 
 	return calcubot
 
-def calcubot_eval(expression):
+def calcubot_eval(inline, expression):
 	try:
 		res = eval(expression)
-		return str(res) + ' = ' + expression
+		
+		if inline:
+			r0 = types.InlineQueryResultArticle('0', 'Result0', types.InputTextMessageContent( str(res) + ' = ' + expression ))
+			r1 = types.InlineQueryResultArticle('1', 'Result1', types.InputTextMessageContent( expression + ' = ' + str(res) ))
+			r2 = types.InlineQueryResultArticle('2', 'Result2', types.InputTextMessageContent( str(res) ))
+			return [r0,r1,r2]
+		else:
+			return str(res) + ' = ' + expression
+		
 	except Exception as e:
-		return e
+		
+		if inline:
+			r = types.InlineQueryResultArticle('0', 'ResultE', types.InputTextMessageContent( e ))
+			return [e]
+		else:
+			return e
