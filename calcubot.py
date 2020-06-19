@@ -2,6 +2,7 @@ import telebot
 import math
 import pandas
 import numpy
+import random
 from telebot import types
 import re
 
@@ -30,7 +31,7 @@ def calcubot_about():
 Expression words are limited for security reasons.\n\
 Available are listed here:\n\
 https://github.com/format37/calcubot_python/blob/master/words.txt\n\
-If you feel that you need other words or any bugs found, just write to me in PM.\n\
+If you feel that you need other words or any bugs found, just write me PM.\n\
 Alexey Yurasov\n\
 @format37"
 
@@ -115,15 +116,6 @@ def check(expression, answer_max_lenght, god_mode, granted_words):
 		return ''
 	
 	# words
-	'''
-	granted_words = [
-		'math',
-		'pi',
-		'for',
-		'sin',
-		'cos'
-	]
-	'''
 	words = re.findall(r'\w+', expression)
 	expression_words=[]
 	for word in words:
