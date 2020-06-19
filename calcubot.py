@@ -27,6 +27,10 @@ def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT, SCRIPT_PATH):
 
 def calcubot_about():
 	return "\
+Expression words are limited for security reasons.\n\
+Available are listed here:\n\
+https://github.com/format37/calcubot_python/blob/master/words.txt\n\
+If you feel that you need other words or any bugs found, just write to me in PM.\n\
 Alexey Yurasov\n\
 @format37"
 
