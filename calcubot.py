@@ -56,7 +56,21 @@ def calcubot_eval(inline, expression,god_mode,granted_words):
 		answer_max_lenght	= 4095
 		check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
 		if check_result=='':
-			res = eval(expression)			
+
+			
+			parts = expression.split('%%')
+			if len(parts)<2:
+				# simple expression
+				res = eval(expression)
+			else:
+				# expressions included into text message
+				answer = []
+				for i in range(0,len(parts)):
+					if i%2:
+						answer.append( str(eval(parts[i])) )
+					else:
+						answer.append(parts[i])
+				res=''.join(answer)
 
 			if inline:
 				answer	= [
@@ -102,7 +116,7 @@ def check(expression, answer_max_lenght, god_mode, granted_words):
 		return ''	
 	
 	# symbols
-	not_letters	= ",.0123456789 ()[]{}:'+-*/\="+'"'
+	not_letters	= ",.0123456789 ()[]{}:'+-*&%/\="+'"'
 	letters	= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 	contains_letters	= False
 	granted_symbols	= letters + not_letters
