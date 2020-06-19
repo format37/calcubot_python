@@ -5,9 +5,7 @@ import numpy
 from telebot import types
 import re
 
-def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT):
-
-	SCRIPT_PATH     = '/home/format37_gmail_com/projects/calcubot_python/'
+def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT, SCRIPT_PATH):
 
 	with open(SCRIPT_PATH+'token.key','r') as file:
 		API_TOKEN=file.read().replace('\n', '')
@@ -83,7 +81,7 @@ def calcubot_eval(inline, expression,god_mode,granted_words):
 		else:
 			return e
 
-def calcubot_words():
+def calcubot_words(SCRIPT_PATH):
 	with open(SCRIPT_PATH+'words.txt','r') as words_file:
 		words=words_file.read().splitlines()
 	return words
