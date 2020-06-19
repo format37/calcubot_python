@@ -52,7 +52,6 @@ Good luck!"
 
 def calcubot_eval(inline, expression,god_mode,granted_words):
 	try:
-		god_mode	= False
 		answer_max_lenght	= 4095
 		check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
 		if check_result=='':
@@ -63,7 +62,7 @@ def calcubot_eval(inline, expression,god_mode,granted_words):
 				# simple expression
 				res = eval(expression)
 			else:
-				# expressions included into text message
+				# expressions included into text message (relevant only for god_mode)
 				answer = []
 				for i in range(0,len(parts)):
 					if i%2:
