@@ -47,11 +47,11 @@ There are 3 ways to calculate an expression:\n\
 And then select wich answer to send.\n\
 Good luck!"
 
-def calcubot_eval(inline, expression,god_mode):
+def calcubot_eval(inline, expression,god_mode,granted_words):
 	try:
 		god_mode	= False
 		answer_max_lenght	= 4096
-		check_result	= check(expression,answer_max_lenght,god_mode)
+		check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
 		if check_result=='':
 			res = eval(expression)			
 
@@ -82,12 +82,18 @@ def calcubot_eval(inline, expression,god_mode):
 			return [r]
 		else:
 			return e
+
+def calcubot_words()
+	with open('words.txt','r') as words_file:
+    	words=words_file.read().splitlines()
+	return words
+	
 		
-def check(expression, answer_max_lenght, god_mode):
+def check(expression, answer_max_lenght, god_mode, granted_words):
 	
 	# len
 	if len(expression)>answer_max_lenght:
-		return 'expression lenght exceeds '+answer_max_lenght+' symbols'
+		return 'Expression lenght exceeds '+answer_max_lenght+' symbols'
 	
 	if god_mode:
 		return ''	
@@ -99,7 +105,7 @@ def check(expression, answer_max_lenght, god_mode):
 	granted_symbols	= letters + not_letters
 	for sym in [expression[i] for i in range(len(expression))]:
 		if granted_symbols.find(sym)==-1:
-			return 'wrong symbol: '+sym
+			return 'Declined symbol: '+sym
 		if not contains_letters and not letters.find(sym)==-1:
 			contains_letters=True
 	
@@ -107,6 +113,7 @@ def check(expression, answer_max_lenght, god_mode):
 		return ''
 	
 	# words
+	'''
 	granted_words = [
 		'math',
 		'pi',
@@ -114,6 +121,7 @@ def check(expression, answer_max_lenght, god_mode):
 		'sin',
 		'cos'
 	]
+	'''
 	words = re.findall(r'\w+', expression)
 	expression_words=[]
 	for word in words:
@@ -129,6 +137,6 @@ def check(expression, answer_max_lenght, god_mode):
 	
 	for expression_word in expression_words:
 		if expression_word not in granted_words:
-			return 'wrong word: '+expression_word			
+			return 'Declined word: '+expression_word			
 		
 	return ''
