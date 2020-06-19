@@ -27,6 +27,20 @@ def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT):
 
 	return calcubot
 
+def calcubot_about()
+	return "\
+	Hi there!\n\
+	I am console conculator, based on python3 eval function\n\
+	There is 3 ways to calculate an expression:\n\
+	1. In personal message to me:\n\
+	2+2\n\
+	2. In group:\n\
+	/cl 2+2\n\
+	3. In any group or personal message to any user:\n\
+	@calcubot 2+2\n\
+	and then select the answer to send\n\
+	Good luck!"
+
 def calcubot_eval(inline, expression,god_mode):
 	try:
 		god_mode	= False
