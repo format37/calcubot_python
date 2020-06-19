@@ -55,7 +55,6 @@ def calcubot_eval(inline, expression,god_mode,granted_words):
 		answer_max_lenght	= 4095
 		check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
 		if check_result=='':
-
 			
 			parts = expression.split('%%')
 			if len(parts)<2:
@@ -71,6 +70,8 @@ def calcubot_eval(inline, expression,god_mode,granted_words):
 						answer.append(parts[i])
 				res=''.join(answer)
 
+			expression	= expression.replace('%%','')
+			
 			if inline:
 				answer	= [
 					(str(res) + ' = ' + expression)[:answer_max_lenght],
@@ -144,6 +145,6 @@ def check(expression, answer_max_lenght, god_mode, granted_words):
 	
 	for expression_word in expression_words:
 		if expression_word not in granted_words:
-			return 'Declined word: '+expression_word			
+			return 'Declined word: '+expression_word		
 		
 	return ''
