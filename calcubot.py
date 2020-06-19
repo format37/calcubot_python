@@ -1,7 +1,7 @@
 import telebot
 import math
-import pandas as pd
-import numpy as np
+import pandas
+import numpy
 from telebot import types
 import re
 
@@ -64,19 +64,26 @@ def calcubot_eval(inline, expression,god_mode):
 		
 def check(expression, answer_max_lenght, god_mode):
 	
+	# len
 	if len(expression)>answer_max_lenght:
 		return 'expression lenght exceeds '+answer_max_lenght+' symbols'
 	
 	if god_mode:
 		return ''
 	
+	
+	# symbols
 	not_letters	= ",.0123456789 ()[]{}:'+-*/\="+'"'
 	letters	= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	contains_letters	= False
 	granted_symbols	= letters + not_letters
 	for sym in [expression[i] for i in range(len(expression))]:
 		if granted_symbols.find(sym)==-1:
 			return 'wrong symbol: '+sym
+		if not contains_letters and not letters.find(sym)==-1:
+			contains_letters=True
 		
+	# words
 	granted_words = [
 		'math',
 		'pi',
@@ -88,7 +95,14 @@ def check(expression, answer_max_lenght, god_mode):
 	expression_words=[]
 	for word in words:
 		if len(word)>1:
-			expression_words.append(word)			
+			check_word	= True
+			for letter in [word[i] for i in range(len(word))]:
+				if letter in [letters[i] for i in range(len(letters))]:
+					pass
+				else:
+					check_word	= False
+			if check_word:
+				expression_words.append(word)
 	
 	for expression_word in expression_words:
 		if expression_word not in granted_words:
