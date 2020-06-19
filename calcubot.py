@@ -58,7 +58,7 @@ def calcubot_eval(inline, expression,god_mode):
 	except Exception as e:
 		
 		if inline:
-			r = types.InlineQueryResultArticle('0', str(e), types.InputTextMessageContent( str(e) ))
+			r = types.InlineQueryResultArticle('0', str(e), types.InputTextMessageContent( str(e)+': '+expression ))
 			return [r]
 		else:
 			return e
