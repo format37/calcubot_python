@@ -83,8 +83,8 @@ def calcubot_eval(inline, expression,god_mode,granted_words):
 		else:
 			return e
 
-def calcubot_words()
-	with open('words.txt','r') as words_file:
+def calcubot_words():
+	with open(SCRIPT_PATH+'words.txt','r') as words_file:
     	words=words_file.read().splitlines()
 	return words
 	
