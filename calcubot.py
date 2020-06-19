@@ -85,7 +85,7 @@ def calcubot_eval(inline, expression,god_mode,granted_words):
 
 def calcubot_words():
 	with open(SCRIPT_PATH+'words.txt','r') as words_file:
-    	words=words_file.read().splitlines()
+		words=words_file.read().splitlines()
 	return words
 	
 		
