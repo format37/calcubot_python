@@ -27,7 +27,7 @@ def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT):
 
 	return calcubot
 
-def calcubot_about()
+def calcubot_about():
 	return "\
 	Hi there!\n\
 	I am console conculator, based on python3 eval function\n\
