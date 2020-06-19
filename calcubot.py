@@ -90,8 +90,7 @@ def check(expression, answer_max_lenght, god_mode):
 		return 'expression lenght exceeds '+answer_max_lenght+' symbols'
 	
 	if god_mode:
-		return ''
-	
+		return ''	
 	
 	# symbols
 	not_letters	= ",.0123456789 ()[]{}:'+-*/\="+'"'
@@ -103,7 +102,10 @@ def check(expression, answer_max_lenght, god_mode):
 			return 'wrong symbol: '+sym
 		if not contains_letters and not letters.find(sym)==-1:
 			contains_letters=True
-		
+	
+	if not contains_letters:
+		return ''
+	
 	# words
 	granted_words = [
 		'math',
