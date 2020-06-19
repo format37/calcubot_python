@@ -31,8 +31,8 @@ def calcubot_about():
 Expression words are limited for security reasons.\n\
 Available are listed here:\n\
 https://github.com/format37/calcubot_python/blob/master/words.txt\n\
-If you feel that you need other words or any bugs found, just write me PM.\n\
-Alexey Yurasov\n\
+If you feel require to add new words or any bugs found, just write me PM.\n\
+Alex\n\
 @format37"
 
 
@@ -53,7 +53,7 @@ Good luck!"
 def calcubot_eval(inline, expression,god_mode,granted_words):
 	try:
 		god_mode	= False
-		answer_max_lenght	= 4096
+		answer_max_lenght	= 4095
 		check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
 		if check_result=='':
 			res = eval(expression)			
