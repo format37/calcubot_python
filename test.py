@@ -4,8 +4,7 @@ import numpy
 import math
 import uuid
 
-def plot(in_y):
-    local_path = ''
+def plot(SCRIPT_PATH,in_y):
     fig = plt.figure()
     for line_number in range(0,len(in_y)):
         data_x = numpy.array( [i for i in range(0,len(in_y[line_number]))] )
@@ -17,7 +16,7 @@ def plot(in_y):
     
     #fig.show()
     filename = str(uuid.uuid4()) + '.png'
-    fig.savefig(local_path + filename, dpi=100)
+    fig.savefig(SCRIPT_PATH + 'plots/' + filename, dpi=100)
     plt.close()
     
-plot([ [math.sin(i)*pow(i,4) for i in range(10,30)],[math.sin(-i)*pow(i,4) for i in range(10,30)] ])
+plot('/home/format37_gmail_com/projects/telegram_bot_server/', [ [math.sin(i)*pow(i,4) for i in range(10,30)],[math.sin(-i)*pow(i,4) for i in range(10,30)] ])
