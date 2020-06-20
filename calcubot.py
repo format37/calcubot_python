@@ -5,6 +5,9 @@ import numpy
 import random
 from telebot import types
 import re
+from scipy.interpolate import make_interp_spline, BSpline
+from matplotlib import pyplot as plt
+import uuid
 
 def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT, SCRIPT_PATH):
 
@@ -49,6 +52,36 @@ There are 3 ways to calculate an expression:\n\
 @calcubot 2+2\n\
 And then select wich answer to send.\n\
 Good luck!"
+
+def calcubot_plot(SCRIPT_PATH,in_y,god_mode,granted_words):
+
+	try:
+		god_mode = False
+		message=''
+		answer_max_lenght	= 4095
+		check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
+		if check_result=='':
+
+			fig = plt.figure()
+			for line_number in range(0,len(in_y)):
+				data_x = numpy.array( [i for i in range(0,len(in_y[line_number]))] )
+				data_y = numpy.array(in_y[line_number])
+				xnew = numpy.linspace(data_x.min(),data_x.max(),300) #300 represents number of points to make between T.min and T.max
+				spl = make_interp_spline(data_x, data_y) #BSpline object
+				power_smooth = spl(xnew)
+				plt.plot(xnew,power_smooth)
+
+			filename = str(uuid.uuid4()) + '.png'
+			filepath = SCRIPT_PATH + 'plots/' + filename
+			fig.savefig(filepath, dpi=100)
+			plt.close()
+		else:
+			return message,''
+		
+		return message,filepath
+		
+	except Exception as e:		
+		return str(e),''
 
 def calcubot_eval(inline, expression,god_mode,granted_words):
 	try:
@@ -104,7 +137,6 @@ def calcubot_words(SCRIPT_PATH):
 	with open(SCRIPT_PATH+'words.txt','r') as words_file:
 		words=words_file.read().splitlines()
 	return words
-	
 		
 def check(expression, answer_max_lenght, god_mode, granted_words):
 	
