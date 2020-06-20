@@ -19,4 +19,4 @@ def plot(SCRIPT_PATH,in_y):
     fig.savefig(SCRIPT_PATH + 'plots/' + filename, dpi=100)
     plt.close()
     
-plot('/home/format37_gmail_com/projects/telegram_bot_server/', [ [math.sin(i)*pow(i,4) for i in range(10,30)],[math.sin(-i)*pow(i,4) for i in range(10,30)] ])
+plot('/home/format37_gmail_com/projects/calcubot_python/', [ [math.sin(i)*pow(i,4) for i in range(10,30)],[math.sin(-i)*pow(i,4) for i in range(10,30)] ])
