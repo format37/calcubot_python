@@ -56,7 +56,6 @@ Good luck!"
 def calcubot_plot(SCRIPT_PATH,expression,god_mode,granted_words):
 
 	try:
-		god_mode = False
 		message=''
 		answer_max_lenght	= 4095
 		check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
