@@ -4,6 +4,14 @@ import numpy
 import math
 import uuid
 
+from calcubot import calcubot_plot,calcubot_words
+
+CALCUBOT_WORDS = calcubot_words(CALCUBOT_SCRIPT_PATH)
+msg='[ [math.sin(i)*pow(i,4) for i in range(10,30)],[math.sin(-i)*pow(i,4) for i in range(10,30)] ]'
+answer,filepath	= calcubot_plot(CALCUBOT_SCRIPT_PATH, msg,True,CALCUBOT_WORDS)
+print(answer,filepath)
+
+'''
 def plot(SCRIPT_PATH,in_y):
     fig = plt.figure()
     for line_number in range(0,len(in_y)):
@@ -20,3 +28,6 @@ def plot(SCRIPT_PATH,in_y):
     plt.close()
     
 plot('/home/format37_gmail_com/projects/calcubot_python/', [ [math.sin(i)*pow(i,4) for i in range(10,30)],[math.sin(-i)*pow(i,4) for i in range(10,30)] ])
+'''
+
+
