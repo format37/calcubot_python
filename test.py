@@ -6,6 +6,7 @@ import uuid
 
 from calcubot import calcubot_plot,calcubot_words
 
+CALCUBOT_SCRIPT_PATH     = '/home/format37_gmail_com/projects/calcubot_python/'
 CALCUBOT_WORDS = calcubot_words(CALCUBOT_SCRIPT_PATH)
 msg='[ [math.sin(i)*pow(i,4) for i in range(10,30)],[math.sin(-i)*pow(i,4) for i in range(10,30)] ]'
 answer,filepath	= calcubot_plot(CALCUBOT_SCRIPT_PATH, msg,True,CALCUBOT_WORDS)
