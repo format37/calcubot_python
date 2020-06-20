@@ -59,7 +59,7 @@ def calcubot_plot(SCRIPT_PATH,in_y,god_mode,granted_words):
 		god_mode = False
 		message=''
 		answer_max_lenght	= 4095
-		check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
+		check_result	= check(in_y,answer_max_lenght,god_mode,granted_words)
 		if check_result=='':
 
 			fig = plt.figure()
