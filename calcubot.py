@@ -53,15 +53,15 @@ There are 3 ways to calculate an expression:\n\
 And then select wich answer to send.\n\
 Good luck!"
 
-def calcubot_plot(SCRIPT_PATH,in_y,god_mode,granted_words):
+def calcubot_plot(SCRIPT_PATH,expression,god_mode,granted_words):
 
 	try:
 		god_mode = False
 		message=''
 		answer_max_lenght	= 4095
-		check_result	= check(in_y,answer_max_lenght,god_mode,granted_words)
+		check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
 		if check_result=='':
-
+			in_y = eval(expression)
 			fig = plt.figure()
 			for line_number in range(0,len(in_y)):
 				data_x = numpy.array( [i for i in range(0,len(in_y[line_number]))] )
