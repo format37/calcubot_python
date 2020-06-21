@@ -39,7 +39,7 @@ If you feel require to add new words or any bugs found, just send me request\n\
 
 def calcubot_help(SCRIPT_PATH):
 	#return SCRIPT_PATH+"gifs/help.gif"
-	return 'https://www.scriptlab.net/telegram/bots/calcubot/help.gif'
+	return 'https://www.scriptlab.net/telegram/bots/calcubot/help.mp4'
 
 def calcubot_plot(SCRIPT_PATH,expression,god_mode,granted_words):
 
