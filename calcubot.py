@@ -34,24 +34,11 @@ def calcubot_about():
 Expression words are limited for security reasons.\n\
 Available are listed here:\n\
 https://github.com/format37/calcubot_python/blob/master/words.txt\n\
-If you feel require to add new words or any bugs found, just write me PM.\n\
-Alex\n\
+If you feel require to add new words or any bugs found, just send me request\n\
 @format37"
 
-
-def calcubot_help():
-	return "\
-Hi there!\n\
-I am console calculator, based on python3 eval() function.\n\
-There are 3 ways to calculate an expression:\n\
-1. In personal message to me:\n\
-2+2\n\
-2. In group:\n\
-/cl 2+2\n\
-3. Inline mode. In any group or personal message to any user:\n\
-@calcubot 2+2\n\
-And then select wich answer to send.\n\
-Good luck!"
+def calcubot_help(SCRIPT_PATH):
+	return "gifs/help.gif"
 
 def calcubot_plot(SCRIPT_PATH,expression,god_mode,granted_words):
 
