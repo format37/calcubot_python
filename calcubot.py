@@ -38,7 +38,7 @@ If you feel require to add new words or any bugs found, just send me request\n\
 @format37"
 
 def calcubot_help(SCRIPT_PATH):
-	return "gifs/help.gif"
+	return SCRIPT_PATH+"gifs/help.gif"
 
 def calcubot_plot(SCRIPT_PATH,expression,god_mode,granted_words):
 
