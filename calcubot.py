@@ -131,6 +131,9 @@ def check(expression, answer_max_lenght, god_mode, granted_words):
 	if len(expression)>answer_max_lenght:
 		return 'Expression lenght exceeds '+answer_max_lenght+' symbols'
 	
+	if not expression.find('**')==-1:
+		return 'Declined word: '+'**'
+	
 	if god_mode:
 		return ''	
 	
