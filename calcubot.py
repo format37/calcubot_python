@@ -58,7 +58,7 @@ def calcubot_plot(SCRIPT_PATH,expression,god_mode,granted_words):
 		answer_max_lenght	= 4095
 		check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
 		if check_result=='':
-			in_y = secure_eval(SCRIPT_PATH,expression)
+			in_y = eval(secure_eval(SCRIPT_PATH,expression))
 			fig = plt.figure()
 			for line_number in range(0,len(in_y)):
 				data_x = numpy.array( [i for i in range(0,len(in_y[line_number]))] )
