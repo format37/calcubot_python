@@ -8,6 +8,8 @@ import re
 from scipy.interpolate import make_interp_spline, BSpline
 from matplotlib import pyplot as plt
 import uuid
+import subprocess
+import sys
 
 def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT, SCRIPT_PATH):
 
@@ -42,7 +44,12 @@ def calcubot_help(SCRIPT_PATH):
 	return 'https://www.scriptlab.net/telegram/bots/calcubot/help.mp4'
 
 def secure_eval(expression):
-	return eval(expression)
+	MyOut = subprocess.Popen(
+	['python3', '/home/alex/projects/ex02/calculate.py',expression],
+	stdout=subprocess.PIPE, 
+	stderr=subprocess.STDOUT)
+	stdout,stderr = MyOut.communicate()
+	return( stdout.decode("utf-8").replace('\n','') )
 
 def calcubot_plot(SCRIPT_PATH,expression,god_mode,granted_words):
 
