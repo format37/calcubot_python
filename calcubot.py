@@ -45,7 +45,7 @@ def calcubot_help(SCRIPT_PATH):
 
 def secure_eval(SCRIPT_PATH,expression):
 	MyOut = subprocess.Popen(
-	['python3', '/home/alex/projects/ex02/calculate.py',expression],
+	['python3', SCRIPT_PATH+'calculate.py',expression],
 	stdout=subprocess.PIPE, 
 	stderr=subprocess.STDOUT)
 	stdout,stderr = MyOut.communicate()
