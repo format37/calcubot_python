@@ -43,7 +43,7 @@ def calcubot_help(SCRIPT_PATH):
 	#return SCRIPT_PATH+"gifs/help.gif"
 	return 'https://www.scriptlab.net/telegram/bots/calcubot/help.mp4'
 
-def secure_eval(expression):
+def secure_eval(SCRIPT_PATH,expression):
 	MyOut = subprocess.Popen(
 	['python3', '/home/alex/projects/ex02/calculate.py',expression],
 	stdout=subprocess.PIPE, 
@@ -58,7 +58,7 @@ def calcubot_plot(SCRIPT_PATH,expression,god_mode,granted_words):
 		answer_max_lenght	= 4095
 		check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
 		if check_result=='':
-			in_y = secure_eval(expression)
+			in_y = secure_eval(SCRIPT_PATH,expression)
 			fig = plt.figure()
 			for line_number in range(0,len(in_y)):
 				data_x = numpy.array( [i for i in range(0,len(in_y[line_number]))] )
@@ -89,13 +89,13 @@ def calcubot_eval(inline, expression,god_mode,granted_words):
 			parts = expression.split('%%')
 			if len(parts)<2:
 				# simple expression
-				res = secure_eval(expression)
+				res = secure_eval(SCRIPT_PATH,expression)
 			else:
 				# expressions included into text message (relevant only for god_mode)
 				answer = []
 				for i in range(0,len(parts)):
 					if i%2:
-						answer.append( str(secure_eval(parts[i])) )
+						answer.append( str(secure_eval(SCRIPT_PATH,parts[i])) )
 					else:
 						answer.append(parts[i])
 				res=''.join(answer)
