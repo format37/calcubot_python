@@ -80,7 +80,7 @@ def calcubot_plot(SCRIPT_PATH,expression,god_mode,granted_words):
 	except Exception as e:		
 		return str(e),''
 
-def calcubot_eval(inline, expression,god_mode,granted_words):
+def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 	try:
 		answer_max_lenght	= 4095
 		check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
