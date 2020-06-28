@@ -148,7 +148,7 @@ def check(expression, answer_max_lenght, god_mode, granted_words):
 		return ''	
 	
 	# symbols
-	not_letters	= ",.0123456789 ()[]{}:'+-*&%/\="+'"'
+	not_letters	= ",.0123456789 ()[]{}:'+-_*&%/\="+'"'
 	letters	= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 	contains_letters	= False
 	granted_symbols	= letters + not_letters
