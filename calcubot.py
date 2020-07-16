@@ -31,9 +31,6 @@ def calcubot_init(WEBHOOK_HOST,WEBHOOK_PORT,WEBHOOK_SSL_CERT, SCRIPT_PATH):
 
 	return calcubot
 
-def nf(value,format_line='{:,}'):
-    return format_line.format(value)
-
 def calcubot_about():
 	return "\
 Expression words are limited for security reasons.\n\
