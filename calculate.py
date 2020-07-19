@@ -4,6 +4,7 @@ import math
 import pandas
 import numpy
 import random
+import datetime
 
 def nf(value,format_line='{:,}'):
     return format_line.format(value)
