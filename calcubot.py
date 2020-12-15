@@ -144,6 +144,18 @@ def check(expression, answer_max_lenght, god_mode, granted_words):
 	if not expression.find('__')==-1:
 		return 'Declined word: '+'__'
 	
+	if not expression.replace(' ','').find('in()')==-1:
+		return 'Declined word: '+'in()'
+	
+	if not expression.find('frame')==-1:
+		return 'Declined word: '+'frame'
+	
+	if not expression.find('buil')==-1:
+		return 'Declined word: '+'buil'
+	
+	if not expression.find('import')==-1:
+		return 'Declined word: '+'import'
+	
 	if god_mode:
 		return ''	
 	
