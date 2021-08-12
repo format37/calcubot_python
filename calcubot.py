@@ -87,6 +87,7 @@ def markup_buttons(names):
 		btn = types.InlineKeyboardButton(text=name, switch_inline_query_current_chat=name)
 		#markup.row(btn)
 		buttons.append(btn)
+		buttons.append(btn)
 	#return buttons"""
 	markup = types.InlineKeyboardMarkup()
 	#btn = types.InlineKeyboardButton(text=names, switch_inline_query_current_chat=names)
