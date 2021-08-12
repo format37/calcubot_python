@@ -133,8 +133,17 @@ def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 					)
 				
 				# answer 1
-				r1 = types.InlineQueryResultArticle('1', answer[1], types.InputTextMessageContent( answer[1] ))
-				
+				button_names = [expression]
+				if not answer[0] in button_names:
+					button_names.append(answer[0])
+				if not expression in button_names:
+					button_names.append(str(res))
+				r1 = types.InlineQueryResultArticle(
+					'1', 
+					answer[1], 
+					types.InputTextMessageContent( answer[1] ),
+					markup_buttons(button_names)
+					)
 
 				# answer 2				
 				r2 = types.InlineQueryResultArticle(
