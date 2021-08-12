@@ -109,7 +109,7 @@ def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 					str(res)[:answer_max_lenght]
 				]				
 				markup = types.InlineKeyboardMarkup()
-				btn = types.InlineKeyboardButton(text='recall')
+				btn = types.InlineKeyboardButton(text='recall', callback_data='do_sth')
 				markup.row(btn)				
 
 				r0 = types.InlineQueryResultArticle('0', answer[0], types.InputTextMessageContent( answer[0] ))
