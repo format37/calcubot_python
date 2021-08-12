@@ -80,6 +80,15 @@ def calcubot_plot(SCRIPT_PATH,expression,god_mode,granted_words):
 	except Exception as e:		
 		return str(e),''
 
+def markup_buttons(names):
+	buttons = []
+	for name in names:
+		markup = types.InlineKeyboardMarkup()
+		btn = types.InlineKeyboardButton(text='recall', switch_inline_query_current_chat=names)
+		markup.row(btn)
+		buttons.append(markup)
+	return buttons
+
 def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 	try:
 		answer_max_lenght	= 4095
@@ -103,19 +112,25 @@ def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 			expression	= expression.replace('%%','')
 			
 			if inline:
+				result_var = str(res)[:answer_max_lenght]
 				answer	= [
 					(str(res) + ' = ' + expression)[:answer_max_lenght],
 					expression + ' = ' + str(res)[:answer_max_lenght],
-					str(res)[:answer_max_lenght]
-				]				
-				markup = types.InlineKeyboardMarkup()
-				#btn = types.InlineKeyboardButton(text='recall', callback_data='do_sth')
-				btn = types.InlineKeyboardButton(text='recall', switch_inline_query_current_chat=answer[2])
-				markup.row(btn)				
-
+					result_var
+				]
+				
+				# answer 1
 				r0 = types.InlineQueryResultArticle('0', answer[0], types.InputTextMessageContent( answer[0] ))
 				r1 = types.InlineQueryResultArticle('1', answer[1], types.InputTextMessageContent( answer[1] ))
-				r2 = types.InlineQueryResultArticle('2', answer[2], types.InputTextMessageContent( answer[2] ), markup)
+
+				# answer 2				
+				r2 = types.InlineQueryResultArticle(
+					'2', 
+					answer[2], 
+					types.InputTextMessageContent( answer[2] ), 
+					markup_buttons([result_var])
+					)
+
 				return [r0,r1,r2]
 			else:
 				return (str(res) + ' = ' + expression)[:answer_max_lenght]
