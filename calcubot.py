@@ -84,14 +84,14 @@ def markup_buttons(names):
 	buttons = []
 	for name in names:
 		#markup = types.InlineKeyboardMarkup()
-		btn = types.InlineKeyboardButton(text='recall', switch_inline_query_current_chat=name)
+		btn = types.InlineKeyboardButton(text=name, switch_inline_query_current_chat=name)
 		#markup.row(btn)
 		buttons.append(btn)
 	#return buttons"""
 	markup = types.InlineKeyboardMarkup()
 	#btn = types.InlineKeyboardButton(text=names, switch_inline_query_current_chat=names)
-	markup.row(btn, btn)
-	#markup.row(tuple(buttons))
+	#markup.row(btn, btn)
+	markup.row(*tuple(buttons))
 	#buttons.append(markup)
 	return markup
 
