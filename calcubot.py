@@ -107,10 +107,14 @@ def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 					(str(res) + ' = ' + expression)[:answer_max_lenght],
 					expression + ' = ' + str(res)[:answer_max_lenght],
 					str(res)[:answer_max_lenght]
-				]
+				]				
+				markup = types.InlineKeyboardMarkup()
+				btn = types.InlineKeyboardButton(text='recall')
+				markup.row(btn)				
+
 				r0 = types.InlineQueryResultArticle('0', answer[0], types.InputTextMessageContent( answer[0] ))
 				r1 = types.InlineQueryResultArticle('1', answer[1], types.InputTextMessageContent( answer[1] ))
-				r2 = types.InlineQueryResultArticle('2', answer[2], types.InputTextMessageContent( answer[2] ))
+				r2 = types.InlineQueryResultArticle('2', answer[2], types.InputTextMessageContent( answer[2] ), markup)
 				return [r0,r1,r2]
 			else:
 				return (str(res) + ' = ' + expression)[:answer_max_lenght]
