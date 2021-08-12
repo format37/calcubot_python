@@ -89,8 +89,8 @@ def markup_buttons(names):
 		buttons.append(markup)
 	return buttons"""
 	markup = types.InlineKeyboardMarkup()
-	btn = types.InlineKeyboardButton(text='recall', switch_inline_query_current_chat=names)
-	markup.row(btn)
+	btn = types.InlineKeyboardButton(text=names, switch_inline_query_current_chat=names)
+	markup.row(btn, btn)
 	buttons.append(markup)
 	return markup
 
