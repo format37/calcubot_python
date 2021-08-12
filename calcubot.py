@@ -82,16 +82,17 @@ def calcubot_plot(SCRIPT_PATH,expression,god_mode,granted_words):
 
 def markup_buttons(names):
 	buttons = []
-	"""for name in names:
-		markup = types.InlineKeyboardMarkup()
-		btn = types.InlineKeyboardButton(text='recall', switch_inline_query_current_chat=names)
-		markup.row(btn)
-		buttons.append(markup)
-	return buttons"""
+	for name in names:
+		#markup = types.InlineKeyboardMarkup()
+		btn = types.InlineKeyboardButton(text='recall', switch_inline_query_current_chat=name)
+		#markup.row(btn)
+		buttons.append(btn)
+	#return buttons"""
 	markup = types.InlineKeyboardMarkup()
-	btn = types.InlineKeyboardButton(text=names, switch_inline_query_current_chat=names)
-	markup.row(btn, btn)
-	buttons.append(markup)
+	#btn = types.InlineKeyboardButton(text=names, switch_inline_query_current_chat=names)
+	#markup.row(btn, btn)
+	markup.row(tuple(buttons))
+	#buttons.append(markup)
 	return markup
 
 def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
@@ -133,7 +134,7 @@ def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 					'2', 
 					answer[2], 
 					types.InputTextMessageContent( answer[2] ), 
-					markup_buttons(result_var)
+					markup_buttons([answer[2]])
 					)
 
 				return [r0,r1,r2]
