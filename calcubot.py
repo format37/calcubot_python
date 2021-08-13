@@ -129,7 +129,7 @@ def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 					'0', 
 					answer[0], 
 					types.InputTextMessageContent( answer[0] ),
-					markup_buttons(button_names)
+					#markup_buttons(button_names)
 					)
 				
 				# answer 1
@@ -142,7 +142,7 @@ def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 					'1', 
 					answer[1], 
 					types.InputTextMessageContent( answer[1] ),
-					markup_buttons(button_names)
+					#markup_buttons(button_names)
 					)
 
 				# answer 2				
@@ -150,7 +150,7 @@ def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 					'2', 
 					answer[2], 
 					types.InputTextMessageContent( answer[2] ), 
-					markup_buttons([answer[2]])
+					#markup_buttons([answer[2]])
 					)
 
 				return [r0,r1,r2]
