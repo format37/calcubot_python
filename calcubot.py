@@ -219,8 +219,8 @@ def check(expression, answer_max_lenght, god_mode, granted_words):
 	if not contains_letters:
 		return ''
 
-	if god_mode:
-		return ''
+	#if god_mode:
+	#	return ''
 	
 	# words
 	words = re.findall(r'\w+', expression)
