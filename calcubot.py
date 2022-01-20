@@ -92,28 +92,6 @@ def markup_buttons(names):
 def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 	try:
 		answer_max_lenght	= 4095
-		#check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
-		#if check_result=='':
-			
-		#parts = expression.split('%%')
-		"""if len(parts)<2:
-			# simple expression
-			check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
-			if check_result=='':
-				res = secure_eval(SCRIPT_PATH,expression)
-		else:
-			# expressions included into text message (relevant only for god_mode)
-			answer = []
-			
-			for i in range(0,len(parts)):
-				check_result	= check(parts[i],answer_max_lenght,god_mode,granted_words)
-				if check_result=='':
-					if i%2:					
-						answer.append( str(secure_eval(SCRIPT_PATH,parts[i])) )
-					else:
-						answer.append(parts[i])
-			if check_result=='':
-				res=''.join(answer)"""
 
 		pattern = r'< <(.*?)> >'
 		extracted_expressions = re.findall(pattern, expression)
@@ -136,7 +114,6 @@ def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 			res = expression_calculated
 
 		if check_result=='':
-			#expression	= expression.replace('%%','')
 			
 			if inline:
 				result_var = str(res)[:answer_max_lenght]
