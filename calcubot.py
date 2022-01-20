@@ -92,23 +92,30 @@ def markup_buttons(names):
 def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 	try:
 		answer_max_lenght	= 4095
-		check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
-		if check_result=='':
+		#check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
+		#if check_result=='':
 			
-			parts = expression.split('%%')
-			if len(parts)<2:
-				# simple expression
+		parts = expression.split('%%')
+		if len(parts)<2:
+			# simple expression
+			check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
+			if check_result=='':
 				res = secure_eval(SCRIPT_PATH,expression)
-			else:
-				# expressions included into text message (relevant only for god_mode)
-				answer = []
-				for i in range(0,len(parts)):
-					if i%2:
+		else:
+			# expressions included into text message (relevant only for god_mode)
+			answer = []
+			
+			for i in range(0,len(parts)):
+				check_result	= check(parts[i],answer_max_lenght,god_mode,granted_words)
+				if check_result=='':
+					if i%2:					
 						answer.append( str(secure_eval(SCRIPT_PATH,parts[i])) )
 					else:
 						answer.append(parts[i])
+			if check_result=='':
 				res=''.join(answer)
 
+		if check_result=='':
 			expression	= expression.replace('%%','')
 			
 			if inline:
@@ -196,10 +203,7 @@ def check(expression, answer_max_lenght, god_mode, granted_words):
 		return 'Declined word: '+'buil'
 	
 	if not expression.find('import')==-1:
-		return 'Declined word: '+'import'
-	
-	if god_mode:
-		return ''	
+		return 'Declined word: '+'import'	
 	
 	# symbols
 	not_letters	= ",.0123456789 ()[]{}:'+-_*&%/\="+'"'
@@ -213,6 +217,9 @@ def check(expression, answer_max_lenght, god_mode, granted_words):
 			contains_letters=True
 	
 	if not contains_letters:
+		return ''
+
+	if god_mode:
 		return ''
 	
 	# words
