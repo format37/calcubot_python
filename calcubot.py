@@ -115,7 +115,7 @@ def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 			if check_result=='':
 				res=''.join(answer)"""
 
-		pattern = r'<<(.*?)>>'
+		pattern = r'< <(.*?)> >'
 		extracted_expressions = re.findall(pattern, expression)
 		expression_calculated = str(expression)
 		check_result = ''
@@ -128,7 +128,7 @@ def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 				check_result	= check(ex,answer_max_lenght,god_mode,granted_words)
 				if check_result=='':
 					expression_calculated = expression_calculated.replace(
-						'<<'+ex+'>>',
+						'< <'+ex+'> >',
 						str(secure_eval(SCRIPT_PATH,ex))
 						)
 				else:
@@ -226,7 +226,7 @@ def check(expression, answer_max_lenght, god_mode, granted_words):
 		return 'Declined word: '+'import'	
 	
 	# symbols
-	not_letters	= ",.0123456789 ()[]{}:'+-_*&%/\="+'"'
+	not_letters	= ",.0123456789 ()[]{}:'+-_*&<>%/\="+'"'
 	letters	= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 	contains_letters	= False
 	granted_symbols	= letters + not_letters
