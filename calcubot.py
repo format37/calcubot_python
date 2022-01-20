@@ -95,8 +95,8 @@ def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 		#check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
 		#if check_result=='':
 			
-		parts = expression.split('%%')
-		if len(parts)<2:
+		#parts = expression.split('%%')
+		"""if len(parts)<2:
 			# simple expression
 			check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
 			if check_result=='':
@@ -113,10 +113,30 @@ def calcubot_eval(SCRIPT_PATH, inline, expression,god_mode,granted_words):
 					else:
 						answer.append(parts[i])
 			if check_result=='':
-				res=''.join(answer)
+				res=''.join(answer)"""
+
+		pattern = r'<<(.*?)>>'
+		extracted_expressions = re.findall(pattern, expression)
+		expression_calculated = str(expression)
+		check_result = ''
+		if len(extracted_expressions) == 0:
+			check_result	= check(expression,answer_max_lenght,god_mode,granted_words)
+			if check_result=='':
+				res = str(secure_eval(SCRIPT_PATH,expression))
+		else:
+			for ex in extracted_expressions:
+				check_result	= check(ex,answer_max_lenght,god_mode,granted_words)
+				if check_result=='':
+					expression_calculated = expression_calculated.replace(
+						'<<'+ex+'>>',
+						str(secure_eval(SCRIPT_PATH,ex))
+						)
+				else:
+					break
+			res = expression_calculated
 
 		if check_result=='':
-			expression	= expression.replace('%%','')
+			#expression	= expression.replace('%%','')
 			
 			if inline:
 				result_var = str(res)[:answer_max_lenght]
