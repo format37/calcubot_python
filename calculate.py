@@ -2,7 +2,11 @@ import resource
 import sys
 import math
 import pandas
+import pandas as pd
 import numpy
+import numpy as np
+import scipy
+from scipy import stats
 import random
 import datetime
 import statistics
@@ -39,9 +43,9 @@ def fact(n):
     return factors
 
 try:
-	res_limits = resource.getrusage(resource.RUSAGE_SELF)
-	resource.setrlimit(resource.RLIMIT_CPU, (1, 1))
-	request = sys.argv[1]
-	print( eval(request) )
+        res_limits = resource.getrusage(resource.RUSAGE_SELF)
+        resource.setrlimit(resource.RLIMIT_CPU, (1, 1))
+        request = sys.argv[1]
+        print( eval(request) )
 except Exception as e:
-	print(e)
+        print(e)
