@@ -1,3 +1,15 @@
+zeros
+ones
+list
+array
+T
+flatten
+pdf
+multivariate_normal
+stats
+linspace
+meshgrid
+np
 fact
 statistics
 median
