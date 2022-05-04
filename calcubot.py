@@ -97,6 +97,9 @@ def calcubot_plot3d(SCRIPT_PATH,expression,god_mode,granted_words):
 import matplotlib.pyplot as plt
 import numpy as np
 import uuid
+import math
+import scipy
+from scipy.interpolate import make_interp_spline
 from scipy import stats
 SCRIPT_PATH = """+'"'+SCRIPT_PATH+'"'+"""
 """
@@ -275,8 +278,8 @@ def check(expression, answer_max_lenght, god_mode, granted_words):
     if not expression.find('__')==-1:
         return 'Declined word: '+'__'
 
-    if not expression.replace(' ','').find('in()')==-1:
-        return 'Declined word: '+'in()'
+    #if not expression.replace(' ','').find('in()')==-1:
+    #    return 'Declined word: '+'in()'
 
     if not expression.find('frame')==-1:
         return 'Declined word: '+'frame'
@@ -288,7 +291,7 @@ def check(expression, answer_max_lenght, god_mode, granted_words):
         return 'Declined word: '+'import'
 
     # symbols
-    not_letters     = ",.0123456789 ()[]{}:;'+-_*&<>%/\="+'"'
+    not_letters     = ",.0123456789 ()[]{}:;'+-_*&#<>%/\="+'"'
     letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
     contains_letters        = False
     granted_symbols = letters + not_letters
