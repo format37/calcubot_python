@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  server:
+    container_name: calcubot
+    restart: always
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./data:/server/data
+    build: server
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Port
+    ports:
+      - "8704:8000"
+    environment:
+      - TZ=America/Los_Angeles
