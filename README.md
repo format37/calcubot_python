@@ -1,3 +1,3 @@
 # calcubot_python
-upgrade of telegram bot @calcubot   
-Bot initiated by https://github.com/format37/telegram_bot_server
+Telegram bot [@calcubot](t.me/calcubot) written in Python.  
+Bot served by https://github.com/format37/telegram_bot
