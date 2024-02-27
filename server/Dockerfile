@@ -2,6 +2,7 @@ FROM python:3.9.16
 WORKDIR /server
 COPY requirements.txt /server
 RUN pip3 install -r requirements.txt --no-cache-dir
+RUN pip3 install pandas==2.2.1
 
 # Set the timezone.
 ENV TZ=America/Los_Angeles
