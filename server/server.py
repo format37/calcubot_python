@@ -35,13 +35,15 @@ async def call_message(request: Request, authorization: str = Header(None)):
 
     # Return empty if message is in group
     message = await request.json()
-    if not message['chat']['type'] == 'private':
+    expression = message['text']
+    start_from_cl = expression.startswith('/cl ')
+    if not start_from_cl and not message['chat']['type'] == 'private':
         return JSONResponse(content={
-                "type": "empty",
-                "body": ''
-            })
+            "type": "text",
+            "body": ''
+        })
 
-    token = None
+    """token = None
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ")[1]
     
@@ -49,29 +51,28 @@ async def call_message(request: Request, authorization: str = Header(None)):
         # logger.info(f'Bot token: {token}')
         pass
     else:
-        answer = 'Bot token not found. Please contact the administrator.'
+        answer = 'Bot token not found. Please contact the developer.'
         return JSONResponse(content={
             "type": "text",
             "body": str(answer)
-        })
+        })"""
     
-    expression = message['text']
-    start_from_cl = expression.startswith('/cl ')
+    
     logger.info(f'expression: {expression} start_from_cl: {start_from_cl}')
-    if start_from_cl or message['chat']['type'] == 'private':
-        if start_from_cl:
-            expression = expression[4:]
-        answer_max_lenght = 4095
-        user_id = str(message['from']['id'])
-        logging.info(f'User: {user_id} Request: {expression}')
-        res = str(secure_eval(expression, 'native'))[:answer_max_lenght]    
-        response = f'{res} = {expression}'
-        # Logging info to docker logs: User and response
-        logging.info(f'User: {user_id} Response: {response}')
-        return JSONResponse(content={
-            "type": "text",
-            "body": response
-        })
+    # if start_from_cl or message['chat']['type'] == 'private':
+    if start_from_cl:
+        expression = expression[4:]
+    answer_max_lenght = 4095
+    user_id = str(message['from']['id'])
+    logging.info(f'User: {user_id} Request: {expression}')
+    res = str(secure_eval(expression, 'native'))[:answer_max_lenght]    
+    response = f'{res} = {expression}'
+    # Logging info to docker logs: User and response
+    logging.info(f'User: {user_id} Response: {response}')
+    return JSONResponse(content={
+        "type": "text",
+        "body": response
+    })
     
 # Post inline query
 @app.post("/inline")
