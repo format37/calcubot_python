@@ -68,7 +68,7 @@ async def call_message(request: Request, authorization: str = Header(None)):
     logging.info(f'User: {user_id} Response: {response}')
     return JSONResponse(content={
         "type": "text",
-        "body": str(response)
+        "body": json.dumps(response)
     })
     
 # Post inline query
