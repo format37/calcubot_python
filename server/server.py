@@ -61,14 +61,22 @@ async def call_message(request: Request, authorization: str = Header(None)):
         expression = expression[4:]
     answer_max_lenght = 4095
     user_id = str(message['from']['id'])
-    logging.info(f'User: {user_id} Request: {expression}')
     res = str(secure_eval(expression, 'native'))[:answer_max_lenght]
+    """logging.info(f'User: {user_id} Request: {expression}')
+    
     response = json.dumps(res + ' = ' + expression)        
     # Logging info to docker logs: User and response
-    logging.info(f'User: {user_id} Response: {response}')
+    logging.info(f'User: {user_id} Response: {response}')"""
+
+    # Before using json.dumps()
+    log_message = res + ' = ' + expression
+    logging.info(f'User: {user_id} Response: {log_message}')
+    # Now continue with your json.dumps() for the actual response
+    response = json.dumps(log_message)
+
     return JSONResponse(content={
         "type": "text",
-        "body": json.dumps(response)
+        "body": response
     })
     
 # Post inline query
