@@ -32,16 +32,19 @@ def secure_eval(expression, mode):
 @app.post("/message")
 async def call_message(request: Request, authorization: str = Header(None)):
     # logger.info('call_message')
-
-    # Return empty if message is in group
     message = await request.json()
-    expression = message['text']
-    start_from_cl = expression.startswith('/cl ')
     if not start_from_cl and not message['chat']['type'] == 'private':
         return JSONResponse(content={
             "type": "text",
             "body": ''
         })
+    if 'text' not in message:
+        return JSONResponse(content={
+            "type": "text",
+            "body": ''
+        })
+    expression = message['text']
+    start_from_cl = expression.startswith('/cl ')
 
     """token = None
     if authorization and authorization.startswith("Bearer "):
