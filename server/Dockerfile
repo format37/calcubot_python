@@ -12,4 +12,4 @@ COPY calculate_inline.py /server
 COPY calculate_native.py /server
 COPY user_defined.py /server
 COPY server.py /server
-CMD ["gunicorn", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--timeout", "120", "server:app"]
+CMD ["gunicorn", "-w", "2", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--timeout", "120", "server:app"]
