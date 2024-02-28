@@ -31,7 +31,7 @@ def secure_eval(expression, mode):
 
 @app.post("/message")
 async def call_message(request: Request, authorization: str = Header(None)):
-    logger.info('call_message')
+    # logger.info('call_message')
 
     # Return empty if message is in group
     message = await request.json()
