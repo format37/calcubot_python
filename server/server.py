@@ -57,6 +57,7 @@ async def call_message(request: Request, authorization: str = Header(None)):
     
     expression = message['text']
     start_from_cl = expression.startswith('/cl ')
+    logger.info(f'expression: {expression} start_from_cl: {start_from_cl}')
     if start_from_cl or message['chat']['type'] == 'private':
         if start_from_cl:
             expression = expression[4:]
