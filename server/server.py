@@ -46,7 +46,7 @@ async def call_message(request: Request, authorization: str = Header(None)):
         token = authorization.split(" ")[1]
     
     if token:
-        logger.info(f'Bot token: {token}')
+        # logger.info(f'Bot token: {token}')
         pass
     else:
         answer = 'Bot token not found. Please contact the administrator.'
@@ -55,21 +55,22 @@ async def call_message(request: Request, authorization: str = Header(None)):
             "body": str(answer)
         })
     
-    answer = 'System is in a maintenance state. Please wait until Feb. 29 2024'
     expression = message['text']
-    if expression.startswith('/cl '):
-        expression = expression[4:]
-    answer_max_lenght = 4095
-    user_id = str(message['from']['id'])
-    logging.info(f'User: {user_id} Request: {expression}')
-    res = str(secure_eval(expression, 'native'))[:answer_max_lenght]    
-    response = f'{res} = {expression}'
-    # Logging info to docker logs: User and response
-    logging.info(f'User: {user_id} Response: {response}')
-    return JSONResponse(content={
-        "type": "text",
-        "body": response
-    })
+    start_from_cl = expression.startswith('/cl ')
+    if start_from_cl or message['chat']['type'] == 'private':
+        if start_from_cl:
+            expression = expression[4:]
+        answer_max_lenght = 4095
+        user_id = str(message['from']['id'])
+        logging.info(f'User: {user_id} Request: {expression}')
+        res = str(secure_eval(expression, 'native'))[:answer_max_lenght]    
+        response = f'{res} = {expression}'
+        # Logging info to docker logs: User and response
+        logging.info(f'User: {user_id} Response: {response}')
+        return JSONResponse(content={
+            "type": "text",
+            "body": response
+        })
     
 # Post inline query
 @app.post("/inline")
