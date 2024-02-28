@@ -61,19 +61,11 @@ async def call_message(request: Request, authorization: str = Header(None)):
         expression = expression[4:]
     answer_max_lenght = 4095
     user_id = str(message['from']['id'])
-    res = str(secure_eval(expression, 'native'))[:answer_max_lenght]
-    """logging.info(f'User: {user_id} Request: {expression}')
-    
-    response = json.dumps(res + ' = ' + expression)        
+    logging.info(f'User: {user_id} Request: {expression}')
+    res = str(secure_eval(expression, 'native'))[:answer_max_lenght]    
+    response = f'{res} = {expression}'
     # Logging info to docker logs: User and response
-    logging.info(f'User: {user_id} Response: {response}')"""
-
-    # Before using json.dumps()
-    log_message = res + ' = ' + expression
-    logging.info(f'User: {user_id} Response: {log_message}')
-    # Now continue with your json.dumps() for the actual response
-    response = json.dumps(log_message)
-
+    logging.info(f'User: {user_id} Response: {response}')
     return JSONResponse(content={
         "type": "text",
         "body": response
@@ -84,7 +76,7 @@ async def call_message(request: Request, authorization: str = Header(None)):
 async def call_inline(request: Request, authorization: str = Header(None)):
     logger.info('call_inline')
     message = await request.json()
-    logger.info(f'inlint content: {message}')
+    logger.info(f'inline content: {message}')
     title = 'Maintance'
     message_text = 'System is in a maintenance state. Please wait until Feb. 29 2024'    
     return JSONResponse(content={
