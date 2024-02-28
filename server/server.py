@@ -6,6 +6,7 @@ import json
 import re
 import pandas as pd
 import matplotlib.pyplot as plt
+import subprocess
 
 # Initialize FastAPI
 app = FastAPI()
@@ -19,6 +20,14 @@ logger.setLevel(logging.INFO)
 async def call_test():
     logger.info('call_test')
     return JSONResponse(content={"status": "ok"})
+
+def secure_eval(expression, mode):
+    ExpressionOut = subprocess.Popen(
+    ['python3', 'calculate_'+mode+'.py',expression],
+    stdout=subprocess.PIPE, 
+    stderr=subprocess.STDOUT)
+    stdout,stderr = ExpressionOut.communicate()
+    return( stdout.decode("utf-8").replace('\n','') )
 
 @app.post("/message")
 async def call_message(request: Request, authorization: str = Header(None)):
@@ -47,9 +56,19 @@ async def call_message(request: Request, authorization: str = Header(None)):
         })
     
     answer = 'System is in a maintenance state. Please wait until Feb. 29 2024'
+    expression = message['text']
+    if expression.startswith('/cl '):
+        expression = expression[4:]
+    answer_max_lenght = 4095
+    user_id = str(message['from']['id'])
+    logging.info(f'User: {user_id} Request: {expression}')
+    res = str(secure_eval(expression, 'native'))[:answer_max_lenght]
+    response = json.dumps(res + ' = ' + expression)        
+    # Logging info to docker logs: User and response
+    logging.info(f'User: {user_id} Response: {response}')
     return JSONResponse(content={
         "type": "text",
-        "body": str(answer)
+        "body": str(response)
     })
     
 # Post inline query
