@@ -85,7 +85,7 @@ async def call_inline(request: Request, authorization: str = Header(None)):
     # logger.info(f'inline content: {message}')
     expression = message['query']
     answer_max_lenght       = 4095
-    res = str(secure_eval(expression, 'inline'))[:answer_max_lenght]
+    res = str(await secure_eval(expression, 'inline'))[:answer_max_lenght]
     answer  = [
                 res + ' = ' + expression,
                 expression + ' = ' + res,
