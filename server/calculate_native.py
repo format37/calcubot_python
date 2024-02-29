@@ -16,7 +16,7 @@ import re
 
 try:
 	res_limits = resource.getrusage(resource.RUSAGE_SELF)
-	resource.setrlimit(resource.RLIMIT_CPU, (4, 4))
+	resource.setrlimit(resource.RLIMIT_CPU, (3, 3))
 	request = argv[1]
 	print( eval(request) )
 except Exception as e:

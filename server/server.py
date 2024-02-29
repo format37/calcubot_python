@@ -21,7 +21,7 @@ async def call_test():
     logger.info('call_test')
     return JSONResponse(content={"status": "ok"})
 
-def secure_eval(expression, mode):
+async def secure_eval(expression, mode):
     ExpressionOut = subprocess.Popen(
     ['python3', 'calculate_'+mode+'.py',expression],
     stdout=subprocess.PIPE, 
@@ -68,7 +68,7 @@ async def call_message(request: Request, authorization: str = Header(None)):
     answer_max_lenght = 4095
     user_id = str(message['from']['id'])
     logging.info(f'User: {user_id} Request: {expression}')
-    res = str(secure_eval(expression, 'native'))[:answer_max_lenght]    
+    res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]    
     response = f'{res} = {expression}'
     # Logging info to docker logs: User and response
     logging.info(f'User: {user_id} Response: {response}')
