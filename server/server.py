@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Request, Header # , HTTPException, 
-from fastapi.responses import JSONResponse # , FileResponse
+from fastapi import FastAPI, Request, Header, HTTPException
+from fastapi.responses import JSONResponse, FileResponse
 import logging
 import subprocess
 import telebot
+import os
 
 calcubot_unsecure_words = [
         'exec',
@@ -53,17 +54,41 @@ async def secure_eval(expression, mode):
         return( stdout.decode("utf-8").replace('\n','') )
     else:
         return 'Request is not supported'
-
+    
 @app.post("/message")
 async def call_message(request: Request, authorization: str = Header(None)):
     # logger.info('call_message')
+    token = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+
+    if token:
+        pass
+    else:
+        """return JSONResponse(content={
+            "type": "text",
+            "body": str(answer)
+        })"""
+        return JSONResponse(content={
+            "type": "empty",
+            "body": ''
+            })
     message = await request.json()
+    bot = telebot.TeleBot(token)
     if 'text' not in message:
         return JSONResponse(content={
             "type": "text",
             "body": ''
         })
     expression = message['text']
+    if expression.startswith('/start') or expression.startswith('/help'):
+        """link = 'https://rtlm.info/help.mp4'
+        bot.send_video(message.chat.id, link,
+                            reply_to_message_id=str(message))"""
+        return JSONResponse(content={
+            "type": "text",
+            "body": 'This is a Python interpreter. Just type your expression and get the result. For example: 2+2'
+        })
     start_from_cl = expression.startswith('/cl ')
     if not start_from_cl and not message['chat']['type'] == 'private':
         return JSONResponse(content={
