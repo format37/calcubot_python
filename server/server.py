@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Header # , HTTPException,
 from fastapi.responses import JSONResponse # , FileResponse
 # import os
 import logging
-# import json
+import json
 # import re
 # import pandas as pd
 # import matplotlib.pyplot as plt
@@ -82,8 +82,8 @@ async def call_message(request: Request, authorization: str = Header(None)):
 async def call_inline(request: Request, authorization: str = Header(None)):
     # logger.info('call_inline')
     message = await request.json()
-    logger.info(f'inline content: {message}')
-    """expression = message['query']
+    # logger.info(f'inline content: {message}')
+    expression = message['query']
     answer_max_lenght       = 4095
     res = str(secure_eval(expression, 'inline'))[:answer_max_lenght]
     answer  = [
@@ -91,10 +91,10 @@ async def call_inline(request: Request, authorization: str = Header(None)):
                 expression + ' = ' + res,
                 res
             ]
-    response = json.dumps(answer)"""
+    message_text = json.dumps(answer)
 
-    title = 'Maintance'
-    message_text = 'System is in a maintenance state. Please wait until Feb. 29 2024'    
+    title = 'Solution'
+    # message_text = 'System is in a maintenance state. Please wait until Feb. 29 2024'    
     return JSONResponse(content={
         "title": title,
         "message_text": message_text,
