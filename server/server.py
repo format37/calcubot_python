@@ -7,7 +7,7 @@ import json
 # import pandas as pd
 # import matplotlib.pyplot as plt
 import subprocess
-
+import telebot
 # Initialize FastAPI
 app = FastAPI()
 
@@ -46,19 +46,7 @@ async def call_message(request: Request, authorization: str = Header(None)):
             "body": ''
         })
 
-    """token = None
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ")[1]
-    
-    if token:
-        # logger.info(f'Bot token: {token}')
-        pass
-    else:
-        answer = 'Bot token not found. Please contact the developer.'
-        return JSONResponse(content={
-            "type": "text",
-            "body": str(answer)
-        })"""
+    """"""
     
     
     # logger.info(f'expression: {expression} start_from_cl: {start_from_cl}')
@@ -80,11 +68,31 @@ async def call_message(request: Request, authorization: str = Header(None)):
 # Post inline query
 @app.post("/inline")
 async def call_inline(request: Request, authorization: str = Header(None)):
-    # logger.info('call_inline')
+
+    token = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ")[1]
+    
+    if token:
+        # logger.info(f'Bot token: {token}')
+        pass
+    else:
+        # answer = 'Bot token not found. Please contact the developer.'
+        """return JSONResponse(content={
+            "type": "text",
+            "body": str(answer)
+        })"""
+        return JSONResponse(content={
+            "type": "empty",
+            "body": ''
+            })
+
     message = await request.json()
-    # logger.info(f'inline content: {message}')
+    bot = telebot.TeleBot(token)
     from_user_id = message['from_user_id']
+    inline_query_id = message['inline_query_id']
     expression = message['query']
+
     answer_max_lenght       = 4095
     res = str(await secure_eval(expression, 'inline'))[:answer_max_lenght]
     answer  = [
@@ -92,7 +100,23 @@ async def call_inline(request: Request, authorization: str = Header(None)):
                 expression + ' = ' + res,
                 res
             ]
-    message_text = json.dumps(answer)
+    inline_elements = []
+    for i in range(len(answer)):    
+        element = telebot.types.InlineQueryResultArticle(
+            '0',
+            answer[0],
+            telebot.types.InputTextMessageContent(answer[0]),
+        )
+        inline_elements.append(element)
+    
+    bot.answer_inline_query(
+        inline_query_id,
+        answer,
+        cache_time=0,
+        is_personal=True
+    )
+
+    """message_text = json.dumps(answer)
     logger.info(f'For user: {from_user_id} Inline result: {message_text}')
 
     title = 'Solution'
@@ -100,4 +124,4 @@ async def call_inline(request: Request, authorization: str = Header(None)):
     return JSONResponse(content={
         "title": title,
         "message_text": message_text,
-        })
+        })"""
