@@ -126,10 +126,16 @@ async def call_inline(request: Request, authorization: str = Header(None)):
             telebot.types.InputTextMessageContent(answer[i]),
         )
         inline_elements.append(element)
-    
-    bot.answer_inline_query(
-        inline_query_id,
-        inline_elements,
-        cache_time=0,
-        is_personal=True
-    )
+    try:
+        bot.answer_inline_query(
+            inline_query_id,
+            inline_elements,
+            cache_time=0,
+            is_personal=True
+        )
+    except Exception as e:
+        logger.error(f'User: {from_user_id} Inline request: {expression} Response: {res} Error: {e}')
+    return JSONResponse(content={
+            "type": "empty",
+            "body": ''
+            })
