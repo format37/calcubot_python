@@ -44,7 +44,7 @@ async def call_test():
     return JSONResponse(content={"status": "ok"})
 
 async def secure_eval(expression, mode):
-    if calcubot_sequrity(expression):
+    if await calcubot_sequrity(expression):
         ExpressionOut = subprocess.Popen(
         ['python3', 'calculate_'+mode+'.py',expression],
         stdout=subprocess.PIPE, 
