@@ -1,11 +1,11 @@
-from fastapi import FastAPI, Request, HTTPException, Header
-from fastapi.responses import JSONResponse, FileResponse
-import os
+from fastapi import FastAPI, Request, Header # , HTTPException, 
+from fastapi.responses import JSONResponse # , FileResponse
+# import os
 import logging
-import json
-import re
-import pandas as pd
-import matplotlib.pyplot as plt
+# import json
+# import re
+# import pandas as pd
+# import matplotlib.pyplot as plt
 import subprocess
 
 # Initialize FastAPI
@@ -67,11 +67,11 @@ async def call_message(request: Request, authorization: str = Header(None)):
         expression = expression[4:]
     answer_max_lenght = 4095
     user_id = str(message['from']['id'])
-    logging.info(f'User: {user_id} Request: {expression}')
+    # logging.info(f'User: {user_id} Request: {expression}')
     res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]    
     response = f'{res} = {expression}'
     # Logging info to docker logs: User and response
-    logging.info(f'User: {user_id} Response: {response}')
+    logging.info(f'User: {user_id} Request: {expression} Response: {response}')
     return JSONResponse(content={
         "type": "text",
         "body": response
@@ -80,9 +80,9 @@ async def call_message(request: Request, authorization: str = Header(None)):
 # Post inline query
 @app.post("/inline")
 async def call_inline(request: Request, authorization: str = Header(None)):
-    logger.info('call_inline')
-    message = await request.json()
-    logger.info(f'inline content: {message}')
+    # logger.info('call_inline')
+    # message = await request.json()
+    # logger.info(f'inline content: {message}')
     title = 'Maintance'
     message_text = 'System is in a maintenance state. Please wait until Feb. 29 2024'    
     return JSONResponse(content={
