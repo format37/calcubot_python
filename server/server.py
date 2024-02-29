@@ -83,6 +83,7 @@ async def call_inline(request: Request, authorization: str = Header(None)):
     # logger.info('call_inline')
     message = await request.json()
     # logger.info(f'inline content: {message}')
+    from_user_id = message['from_user_id']
     expression = message['query']
     answer_max_lenght       = 4095
     res = str(await secure_eval(expression, 'inline'))[:answer_max_lenght]
@@ -92,6 +93,7 @@ async def call_inline(request: Request, authorization: str = Header(None)):
                 res
             ]
     message_text = json.dumps(answer)
+    logger.info(f'For user: {from_user_id} Inline result: {message_text}')
 
     title = 'Solution'
     # message_text = 'System is in a maintenance state. Please wait until Feb. 29 2024'    
