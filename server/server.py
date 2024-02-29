@@ -68,7 +68,7 @@ async def call_message(request: Request, authorization: str = Header(None)):
 # Post inline query
 @app.post("/inline")
 async def call_inline(request: Request, authorization: str = Header(None)):
-
+    logger.info('call_inline')
     token = None
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ")[1]
@@ -86,12 +86,15 @@ async def call_inline(request: Request, authorization: str = Header(None)):
             "type": "empty",
             "body": ''
             })
+    logger.info(f'Bot token: {token}')
 
     message = await request.json()
     bot = telebot.TeleBot(token)
     from_user_id = message['from_user_id']
     inline_query_id = message['inline_query_id']
     expression = message['query']
+
+    logger.info(f'User: {from_user_id} Request: {expression}')
 
     answer_max_lenght       = 4095
     res = str(await secure_eval(expression, 'inline'))[:answer_max_lenght]
@@ -104,14 +107,14 @@ async def call_inline(request: Request, authorization: str = Header(None)):
     for i in range(len(answer)):    
         element = telebot.types.InlineQueryResultArticle(
             '0',
-            answer[0],
+            answer[i],
             telebot.types.InputTextMessageContent(answer[0]),
         )
         inline_elements.append(element)
     
     bot.answer_inline_query(
         inline_query_id,
-        answer,
+        inline_elements,
         cache_time=0,
         is_personal=True
     )
