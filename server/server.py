@@ -74,12 +74,17 @@ async def call_message(request: Request, authorization: str = Header(None)):
             "body": ''
             })
     message = await request.json()
-    bot = telebot.TeleBot(token)
+    # bot = telebot.TeleBot(token)
     if 'text' not in message:
         return JSONResponse(content={
-            "type": "text",
+            "type": "empty",
             "body": ''
-        })
+            })
+    if not message['chat']['type'] == 'private':
+        return JSONResponse(content={
+            "type": "empty",
+            "body": ''
+            })
     expression = message['text']
     if expression.startswith('/start') or expression.startswith('/help'):
         """link = 'https://rtlm.info/help.mp4'
