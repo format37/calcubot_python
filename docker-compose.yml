@@ -8,6 +8,8 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - ./data:/server/data
     build: server
+    # Limit cpu
+    cpus: 1
     logging:
       options:
         max-size: "10m"
