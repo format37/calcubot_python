@@ -28,7 +28,6 @@ incomplete_expression_patterns = [
     r'\([^\)]*$',  # unclosed parenthesis
     r'^[^\(]*\)',  # unopened parenthesis
     r'(?<!\*)\*{3,}(?!\*)|(?<!\*)\*(?!\*)',  # sequences of 3 or more '*' that are not '**'
-    r'[-+*/%](//|(?=[-+/]))',  # operators followed by another operator, including invalid use of '//', but not '**'
     r'[-+*/%]$',  # expression ends with an operator
     r'^[*/+%]',  # expression starts with non-sign operator
     r'\d*\.\d*\.',  # multiple decimal points in a number
