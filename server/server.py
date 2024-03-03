@@ -45,6 +45,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 async def is_complete_expression(expression):
+    if expression.strip() == '':
+        return False
     for pattern in incomplete_expression_patterns:
         if re.search(pattern, expression):
             return False
