@@ -28,12 +28,13 @@ incomplete_expression_patterns = [
     r'\([^\)]*$',  # unclosed parenthesis
     r'^[^\(]*\)',  # unopened parenthesis
     r'(?<!\*)\*{3,}(?!\*)|(?<!\*)\*(?!\*)',  # sequences of 3 or more '*' that are not '**'
-    r'[-+/\*](?=[-+/])',  # operators followed by another operator, but not **
-    r'[-+*/]$',  # expression ends with an operator
-    r'^[*/+]',  # expression starts with non-sign operator
+    r'[-+*/%](//|(?=[-+/]))',  # operators followed by another operator, including invalid use of '//', but not '**'
+    r'[-+*/%]$',  # expression ends with an operator
+    r'^[*/+%]',  # expression starts with non-sign operator
     r'\d*\.\d*\.',  # multiple decimal points in a number
     r'\.\D',  # decimal point not followed by a digit
     r'\D\.',  # decimal point not preceded by a digit
+    r'(?<=[^\d\s])(//)(?=[^\d\s])',  # '//' not between two numbers
 ]
 
 # Initialize FastAPI
