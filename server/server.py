@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse, FileResponse
 import logging
 import subprocess
 import telebot
-import os
+import re
 
 calcubot_unsecure_words = [
         'exec',
@@ -23,6 +23,17 @@ calcubot_unsecure_words = [
         'getattr'
     ]
 
+incomplete_expression_patterns = [
+    r'\(\)',  # empty parentheses
+    r'\([^\(\)]*$',  # unclosed parenthesis
+    r'^[^\(\)]*\)',  # unopened parenthesis
+    r'[-+*/]{2,}',  # two or more operators in a row
+    r'[-+*/]$',  # expression ends with an operator
+    r'^[-+*/]',  # expression starts with an operator (assuming it does not start with a sign)
+    r'\d+\.\d*\.\d+',  # multiple decimal points in numbers
+    r'\.\d*\.',  # decimal point without a number
+]
+
 # Initialize FastAPI
 app = FastAPI()
 
@@ -30,6 +41,13 @@ app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+async def is_complete_expression(expression):
+    for pattern in incomplete_expression_patterns:
+        if re.search(pattern, expression):
+            return False
+    # Implement additional checks if needed
+    return True
 
 async def calcubot_sequrity(request):
     # Check is request sequre:
@@ -142,13 +160,16 @@ async def call_inline(request: Request, authorization: str = Header(None)):
     inline_query_id = message['inline_query_id']
     expression = message['query']
 
-    answer_max_lenght       = 4095
-    res = str(await secure_eval(expression, 'inline'))[:answer_max_lenght]
-    answer  = [
-                res + ' = ' + expression,
-                expression + ' = ' + res,
-                res
-            ]
+    if not await is_complete_expression(expression):
+        answer = [f'Incomplete expression: {expression}']
+    else:
+        answer_max_lenght       = 4095
+        res = str(await secure_eval(expression, 'inline'))[:answer_max_lenght]
+        answer  = [
+                    res + ' = ' + expression,
+                    expression + ' = ' + res,
+                    res
+                ]
     logger.info(f'User: {from_user_id} Inline request: {expression} Response: {res}')
     inline_elements = []
     for i in range(len(answer)):    
