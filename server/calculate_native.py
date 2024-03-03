@@ -13,22 +13,21 @@ import math
 import sympy
 import json
 import re
-import signal
+# import signal
 
 # Add the signal handling function to catch SIGXCPU
-def signal_handler(signum, frame):
-    print('Timeout exceeds')
+"""def signal_handler(signum, frame):
+    print('Timeout exceeds')"""
 
-"""try:
+try:
 	res_limits = resource.getrusage(resource.RUSAGE_SELF)
 	resource.setrlimit(resource.RLIMIT_CPU, (3, 3))
 	request = argv[1]
 	print( eval(request) )
 except Exception as e:
 	print(e)
-"""
 
-try:
+"""try:
     res_limits = resource.getrusage(resource.RUSAGE_SELF)
     resource.setrlimit(resource.RLIMIT_CPU, (2, 2))
     
@@ -42,3 +41,4 @@ try:
     
 except Exception as e:
     print(e)
+"""
