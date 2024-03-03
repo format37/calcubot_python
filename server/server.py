@@ -161,7 +161,8 @@ async def call_inline(request: Request, authorization: str = Header(None)):
     expression = message['query']
 
     if not await is_complete_expression(expression):
-        answer = [f'Incomplete expression: {expression}']
+        res = f'Incomplete expression: {expression}'
+        answer = [res]
     else:
         answer_max_lenght       = 4095
         res = str(await secure_eval(expression, 'inline'))[:answer_max_lenght]
