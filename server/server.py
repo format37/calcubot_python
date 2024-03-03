@@ -27,7 +27,7 @@ incomplete_expression_patterns = [
     r'\(\)',  # empty parentheses
     r'\([^\)]*$',  # unclosed parenthesis
     r'^[^\(]*\)',  # unopened parenthesis
-    r'(?<!\*)\*{2,}(?!\*)',  # sequences of 3 or more '*' that are not '**'
+    r'(?<!\*)\*{3,}(?!\*)|(?<!\*)\*(?!\*)',  # sequences of 3 or more '*' that are not '**'
     r'[-+/\*](?=[-+/])',  # operators followed by another operator, but not **
     r'[-+*/]$',  # expression ends with an operator
     r'^[*/+]',  # expression starts with non-sign operator
