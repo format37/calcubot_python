@@ -120,7 +120,7 @@ async def call_message(request: Request, authorization: str = Header(None)):
             "type": "text",
             "body": 'This is a Python interpreter. Just type your expression and get the result. For example: 2+2'
         })
-    start_from_cl = expression.startswith('/cl ')
+    start_from_cl = expression.startswith('/cl')
     if not start_from_cl and not message['chat']['type'] == 'private':
         return JSONResponse(content={
             "type": "text",
@@ -129,11 +129,13 @@ async def call_message(request: Request, authorization: str = Header(None)):
 
     if start_from_cl:
         expression = expression[4:]
-    if expression.strip() == '':
-        return JSONResponse(content={
-            "type": "text",
-            "body": 'This is a Python interpreter. Just type your expression and get the result. For example: /cl 2+2'
-        })
+        if expression.strip() == '':
+            return JSONResponse(content={
+                "type": "text",
+                "body": 'This is a Python interpreter. Just type your expression and get the result. For example: /cl 2+2'
+            })
+        else:
+            logger.info(f'User: {message["from"]["id"]} Request: {expression}')
     answer_max_lenght = 4095
     user_id = str(message['from']['id'])
     # logging.info(f'User: {user_id} Request: {expression}')
