@@ -34,6 +34,8 @@ incomplete_expression_patterns = [
     r'\.\D',  # decimal point not followed by a digit
     r'\D\.',  # decimal point not preceded by a digit
     r'(?<=[^\d\s])(//)(?=[^\d\s])',  # '//' not between two numbers
+    r'\[[^\[\]]*$',  # unclosed square bracket
+    r'^[^\[\]]*\]',  # unopened square bracket
 ]
 
 # Initialize FastAPI
