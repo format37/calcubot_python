@@ -130,9 +130,13 @@ async def call_message(request: Request, authorization: str = Header(None)):
     if start_from_cl:
         expression = expression[4:]
         if expression.strip() == '':
+            if message['chat']['type'] == 'private':
+                body = 'This is a Python interpreter. Just type your expression and get the result. For example: 2+2'
+            else:
+                body = 'This is a Python interpreter. Just type your expression and get the result. For example: /cl 2+2'
             return JSONResponse(content={
                 "type": "text",
-                "body": 'This is a Python interpreter. Just type your expression and get the result. For example: /cl 2+2'
+                "body": body
             })
         else:
             logger.info(f'User: {message["from"]["id"]} Request: {expression}')
