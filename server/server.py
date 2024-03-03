@@ -27,9 +27,10 @@ incomplete_expression_patterns = [
     r'\(\)',  # empty parentheses
     r'\([^\(\)]*$',  # unclosed parenthesis
     r'^[^\(\)]*\)',  # unopened parenthesis
-    r'[-+*/]{2,}',  # two or more operators in a row
+    r'(?<!\*)\*{3,}',  # three or more * not preceded by *
+    r'(?<!\*)[-+*/]{2,}',  # two or more operators in a row not preceded by *
     r'[-+*/]$',  # expression ends with an operator
-    r'^[-+*/]',  # expression starts with an operator (assuming it does not start with a sign)
+    r'^[*/+]',  # expression starts with non-sign operator (excluding minus sign as first character)
     r'\d+\.\d*\.\d+',  # multiple decimal points in numbers
     r'\.\d*\.',  # decimal point without a number
 ]
