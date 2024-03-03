@@ -171,7 +171,7 @@ async def call_inline(request: Request, authorization: str = Header(None)):
             "body": ''
             })
     message = await request.json()
-    bot = telebot.TeleBot(token)
+    # bot = telebot.TeleBot(token)
     from_user_id = message['from_user_id']
     inline_query_id = message['inline_query_id']
     expression = message['query']
@@ -188,7 +188,11 @@ async def call_inline(request: Request, authorization: str = Header(None)):
                     res
                 ]
     logger.info(f'User: {from_user_id} Inline request: {expression} Response: {res}')
-    inline_elements = []
+    return JSONResponse(content={
+            "type": "inline",
+            "body": answer
+            })
+    """inline_elements = []
     for i in range(len(answer)):    
         element = telebot.types.InlineQueryResultArticle(
             str(i),
@@ -208,4 +212,4 @@ async def call_inline(request: Request, authorization: str = Header(None)):
     return JSONResponse(content={
             "type": "empty",
             "body": ''
-            })
+            })"""
