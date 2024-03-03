@@ -129,6 +129,11 @@ async def call_message(request: Request, authorization: str = Header(None)):
 
     if start_from_cl:
         expression = expression[4:]
+    if expression.strip() == '':
+        return JSONResponse(content={
+            "type": "text",
+            "body": 'This is a Python interpreter. Just type your expression and get the result. For example: /cl 2+2'
+        })
     answer_max_lenght = 4095
     user_id = str(message['from']['id'])
     # logging.info(f'User: {user_id} Request: {expression}')
