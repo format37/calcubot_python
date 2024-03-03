@@ -25,14 +25,15 @@ calcubot_unsecure_words = [
 
 incomplete_expression_patterns = [
     r'\(\)',  # empty parentheses
-    r'\([^\(\)]*$',  # unclosed parenthesis
-    r'^[^\(\)]*\)',  # unopened parenthesis
-    r'(?<!\*)\*{3,}',  # three or more * not preceded by *
-    r'(?<!\*)[-+*/]{2,}',  # two or more operators in a row not preceded by *
+    r'\([^\)]*$',  # unclosed parenthesis
+    r'^[^\(]*\)',  # unopened parenthesis
+    r'(?<!\*)\*{2,}(?!\*)',  # sequences of 3 or more '*' that are not '**'
+    r'[-+/\*](?=[-+/])',  # operators followed by another operator, but not **
     r'[-+*/]$',  # expression ends with an operator
-    r'^[*/+]',  # expression starts with non-sign operator (excluding minus sign as first character)
-    r'\d+\.\d*\.\d+',  # multiple decimal points in numbers
-    r'\.\d*\.',  # decimal point without a number
+    r'^[*/+]',  # expression starts with non-sign operator
+    r'\d*\.\d*\.',  # multiple decimal points in a number
+    r'\.\D',  # decimal point not followed by a digit
+    r'\D\.',  # decimal point not preceded by a digit
 ]
 
 # Initialize FastAPI
