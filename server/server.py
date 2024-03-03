@@ -134,12 +134,13 @@ async def call_message(request: Request, authorization: str = Header(None)):
                 body = 'This is a Python interpreter. Just type your expression and get the result. For example: 2+2'
             else:
                 body = 'This is a Python interpreter. Just type your expression and get the result. For example: /cl 2+2'
+            logger.info(f'[start_from_cl] User: {message["from"]["id"]} Request: {expression}')
             return JSONResponse(content={
                 "type": "text",
                 "body": body
             })
         else:
-            logger.info(f'User: {message["from"]["id"]} Request: {expression}')
+            logger.info(f'[start_from_cl] User: {message["from"]["id"]} Request: {expression}')
     answer_max_lenght = 4095
     user_id = str(message['from']['id'])
     # logging.info(f'User: {user_id} Request: {expression}')
