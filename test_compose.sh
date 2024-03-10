@@ -1,1 +1,1 @@
-sudo docker-compose up --build -d --force-recreate --remove-orphans calcubot_test
+sudo docker-compose up --build -d --read-only --force-recreate --remove-orphans calcubot_test
