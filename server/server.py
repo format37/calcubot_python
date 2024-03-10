@@ -25,16 +25,16 @@ calcubot_unsecure_words = [
     ]
 
 incomplete_expression_patterns = [
-    r'\(\)',  # empty parentheses
-    r'\([^\)]*$',  # unclosed parenthesis
-    r'^[^\(]*\)',  # unopened parenthesis
-    r'(?<!\*)\*{3,}(?!\*)',  # sequences of 3 or more '*' that are not '**'
-    r'[-+*/%]$',  # expression ends with an operator
-    r'^[*/+%]',  # expression starts with non-sign operator
-    r'\d*\.\d*\.',  # multiple decimal points in a number
-    r'\.\D',  # decimal point not followed by a digit
-    r'\D\.',  # decimal point not preceded by a digit
-    r'(?<=[^\d\s])(//)(?=[^\d\s])',  # '//' not between two numbers
+    r'\(\)', # empty parentheses
+    r'[a-zA-Z0-9_\.]*\([^\)]*$', # unclosed parenthesis accounting for function calls
+    r'^[^\(]*[a-zA-Z0-9_\.]+\)', # unopened parenthesis accounting for function calls
+    r'(?<!\*)\*{3,}(?!\*)', # sequences of 3 or more '*' that are not '**'
+    r'[-+*/%]$', # expression ends with an operator
+    r'^[*/+%]', # expression starts with non-sign operator
+    r'\d*\.\d*\.', # multiple decimal points in a number
+    r'\.\D', # decimal point not followed by a digit
+    r'\D\.', # decimal point not preceded by a digit
+    r'(?<=[^\d\s])(//)(?=[^\d\s])', # '//' not between two numbers
 ]
 
 # Initialize FastAPI
@@ -53,13 +53,10 @@ async def is_complete_expression(expression):
             return False
     return True
 
-async def calcubot_sequrity(request):
-    # Check is request sequre:
-    for word in calcubot_unsecure_words:
-        if word in request:
-            # add_to_blocked_csv(user_id)
-            return False
-    return True
+async def calcubot_security(expression):
+    # Create a regex pattern that matches any of the insecure words
+    insecure_pattern = r'\b(?:' + '|'.join(re.escape(word) for word in calcubot_unsecure_words) + r')\b'
+    return not re.search(insecure_pattern, expression)
 
 @app.get("/test")
 async def call_test():
