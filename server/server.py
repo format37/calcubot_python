@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Header # , HTTPException
 from fastapi.responses import JSONResponse # , FileResponse
 import logging
 import subprocess
-import re
+# import re
 import ast
 
 calcubot_unsecure_words = [
@@ -26,16 +26,16 @@ calcubot_unsecure_words = [
     ]
 
 incomplete_expression_patterns = [
-    r'\(\)', # empty parentheses
-    r'[a-zA-Z0-9_\.]*\([^\)]*$', # unclosed parenthesis accounting for function calls
-    r'^[^\(]*[a-zA-Z0-9_\.]+\)', # unopened parenthesis accounting for function calls
-    r'(?<!\*)\*{3,}(?!\*)', # sequences of 3 or more '*' that are not '**'
-    r'[-+*/%]$', # expression ends with an operator
-    r'^[*/+%]', # expression starts with non-sign operator
-    r'\d*\.\d*\.', # multiple decimal points in a number
-    r'\.\D', # decimal point not followed by a digit
-    r'\D\.', # decimal point not preceded by a digit
-    r'(?<=[^\d\s])(//)(?=[^\d\s])', # '//' not between two numbers
+    r'\(\)',  # empty parentheses
+    r'\([^\)]*$',  # unclosed parenthesis
+    r'^[^\(]*\)',  # unopened parenthesis
+    r'(?<!\*)\*{3,}(?!\*)',  # sequences of 3 or more '*' that are not '**'
+    r'[-+*/%]$',  # expression ends with an operator
+    r'^[*/+%]',  # expression starts with non-sign operator
+    r'\d*\.\d*\.',  # multiple decimal points in a number
+    r'\.\D',  # decimal point not followed by a digit
+    r'\D\.',  # decimal point not preceded by a digit
+    r'(?<=[^\d\s])(//)(?=[^\d\s])',  # '//' not between two numbers
 ]
 
 # Initialize FastAPI
@@ -46,6 +46,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+"""async def is_complete_expression(expression):
+    if expression.strip() == '':
+        return False
+    for pattern in incomplete_expression_patterns:
+        if re.search(pattern, expression):
+            return False
+    return True"""
 async def is_complete_expression(expression):
     try:
         ast.parse(expression)
@@ -53,10 +60,12 @@ async def is_complete_expression(expression):
     except SyntaxError:
         return False
 
-async def calcubot_security(expression):
-    # Create a regex pattern that matches any of the insecure words
-    insecure_pattern = r'\b(?:' + '|'.join(re.escape(word) for word in calcubot_unsecure_words) + r')\b'
-    return not re.search(insecure_pattern, expression)
+async def calcubot_security(request):
+    # Check is request sequre:
+    for word in calcubot_unsecure_words:
+        if word in request:
+            return False
+    return True
 
 @app.get("/test")
 async def call_test():
