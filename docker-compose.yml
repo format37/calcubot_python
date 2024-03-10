@@ -20,10 +20,11 @@ services:
   calcubot_test:
     container_name: calcubot_test
     restart: always
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
-      - ./data:/server/data
+    read_only: true
+    # volumes:
+      # - /etc/localtime:/etc/localtime:ro
+      # - /etc/timezone:/etc/timezone:ro
+      # - ./data:/server/data
     build: server
     # Limit cpu
     cpus: 1

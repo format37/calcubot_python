@@ -1,8 +1,7 @@
-from fastapi import FastAPI, Request, Header, HTTPException
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi import FastAPI, Request, Header # , HTTPException
+from fastapi.responses import JSONResponse # , FileResponse
 import logging
 import subprocess
-import telebot
 import re
 
 calcubot_unsecure_words = [
@@ -52,7 +51,6 @@ async def is_complete_expression(expression):
     for pattern in incomplete_expression_patterns:
         if re.search(pattern, expression):
             return False
-    # Implement additional checks if needed
     return True
 
 async def calcubot_sequrity(request):
@@ -81,35 +79,12 @@ async def secure_eval(expression, mode):
     
 @app.post("/message")
 async def call_message(request: Request, authorization: str = Header(None)):
-    # logger.info('call_message')
-    token = None
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ")[1]
-
-    if token:
-        pass
-    else:
-        """return JSONResponse(content={
-            "type": "text",
-            "body": str(answer)
-        })"""
-        return JSONResponse(content={
-            "type": "empty",
-            "body": ''
-            })
     message = await request.json()
-    # bot = telebot.TeleBot(token)
     if 'text' not in message:
         return JSONResponse(content={
             "type": "empty",
             "body": ''
             })
-    
-    """if not message['chat']['type'] == 'private':
-        return JSONResponse(content={
-            "type": "empty",
-            "body": ''
-            })"""
     
     expression = message['text']
     if expression.startswith('/start') or expression.startswith('/help'):
@@ -143,7 +118,6 @@ async def call_message(request: Request, authorization: str = Header(None)):
             logger.info(f'[start_from_cl] User: {message["from"]["id"]} Request: {expression}')
     answer_max_lenght = 4095
     user_id = str(message['from']['id'])
-    # logging.info(f'User: {user_id} Request: {expression}')
     res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]    
     response = f'{res} = {expression}'
     prefix = 'cl ' if start_from_cl else ''
@@ -156,26 +130,8 @@ async def call_message(request: Request, authorization: str = Header(None)):
 # Post inline query
 @app.post("/inline")
 async def call_inline(request: Request, authorization: str = Header(None)):
-    # logger.info('call_inline')
-    token = None
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization.split(" ")[1]
-    
-    if token:
-        pass
-    else:
-        """return JSONResponse(content={
-            "type": "text",
-            "body": str(answer)
-        })"""
-        return JSONResponse(content={
-            "type": "empty",
-            "body": ''
-            })
     message = await request.json()
-    # bot = telebot.TeleBot(token)
     from_user_id = message['from_user_id']
-    inline_query_id = message['inline_query_id']
     expression = message['query']
 
     if not await is_complete_expression(expression):
@@ -194,24 +150,3 @@ async def call_inline(request: Request, authorization: str = Header(None)):
             "type": "inline",
             "body": answer
             })
-    """inline_elements = []
-    for i in range(len(answer)):    
-        element = telebot.types.InlineQueryResultArticle(
-            str(i),
-            answer[i],
-            telebot.types.InputTextMessageContent(answer[i]),
-        )
-        inline_elements.append(element)
-    try:
-        bot.answer_inline_query(
-            inline_query_id,
-            inline_elements,
-            cache_time=0,
-            is_personal=True
-        )
-    except Exception as e:
-        logger.error(f'User: {from_user_id} Inline request: {expression} Response: {res} Error: {e}')
-    return JSONResponse(content={
-            "type": "empty",
-            "body": ''
-            })"""
