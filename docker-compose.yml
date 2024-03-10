@@ -20,7 +20,9 @@ services:
   calcubot_test:
     container_name: calcubot_test
     restart: always
-    # read_only: true
+    read_only: true
+    tmpfs:
+      - /tmp
     # volumes:
       # - /etc/localtime:/etc/localtime:ro
       # - /etc/timezone:/etc/timezone:ro
