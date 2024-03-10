@@ -35,6 +35,9 @@ logger.setLevel(logging.INFO)
 
 async def is_complete_expression(expression):
     try:
+        # If empty string then return False
+        if expression.strip() == '':
+            return False
         ast.parse(expression)
         return True
     except SyntaxError:
