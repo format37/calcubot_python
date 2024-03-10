@@ -20,7 +20,9 @@ calcubot_unsecure_words = [
         'globals',
         'locals',
         'builtins',
-        'getattr'
+        'getattr',
+        'with',
+        'token'
     ]
 
 incomplete_expression_patterns = [
