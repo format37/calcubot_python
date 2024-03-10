@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse # , FileResponse
 import logging
 import subprocess
 import re
+import ast
 
 calcubot_unsecure_words = [
         'exec',
@@ -46,12 +47,11 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 async def is_complete_expression(expression):
-    if expression.strip() == '':
+    try:
+        ast.parse(expression)
+        return True
+    except SyntaxError:
         return False
-    for pattern in incomplete_expression_patterns:
-        if re.search(pattern, expression):
-            return False
-    return True
 
 async def calcubot_security(expression):
     # Create a regex pattern that matches any of the insecure words
@@ -64,7 +64,7 @@ async def call_test():
     return JSONResponse(content={"status": "ok"})
 
 async def secure_eval(expression, mode):
-    if await calcubot_sequrity(expression):
+    if await calcubot_security(expression):
         ExpressionOut = subprocess.Popen(
         ['python3', 'calculate_'+mode+'.py',expression],
         stdout=subprocess.PIPE, 
