@@ -3,10 +3,9 @@ services:
   calcubot:
     container_name: calcubot
     restart: always
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
-      - ./data:/server/data
+    read_only: true
+    tmpfs:
+      - /tmp
     build: server
     # Limit cpu
     cpus: 1
@@ -23,10 +22,6 @@ services:
     read_only: true
     tmpfs:
       - /tmp
-    # volumes:
-      # - /etc/localtime:/etc/localtime:ro
-      # - /etc/timezone:/etc/timezone:ro
-      # - ./data:/server/data
     build: server
     # Limit cpu
     cpus: 1
