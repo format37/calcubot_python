@@ -13,13 +13,12 @@ import math
 import sympy
 import json
 import re
+import resource
 
 try:
-    res_limits = resource.getrusage(resource.RUSAGE_SELF)
-    resource.setrlimit(resource.RLIMIT_CPU, (2, 2))
-    request = argv[1]
-    print(ast.literal_eval(request))
-except (ValueError, SyntaxError) as e:
-    print(f"Invalid input: {e}")
+	res_limits = resource.getrusage(resource.RUSAGE_SELF)
+	resource.setrlimit(resource.RLIMIT_CPU, (2, 2))
+	request = argv[1]
+	print( eval(request) )
 except Exception as e:
-    print(e)
+	print(e)
