@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request, Header # , HTTPException
 from fastapi.responses import JSONResponse # , FileResponse
 import logging
 import subprocess
-# import re
 import ast
 
 calcubot_unsecure_words = [
@@ -22,7 +21,8 @@ calcubot_unsecure_words = [
         'builtins',
         'getattr',
         'with',
-        'token'
+        'token',
+        'globals'
     ]
 
 # Initialize FastAPI
