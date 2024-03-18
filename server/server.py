@@ -4,26 +4,15 @@ import logging
 import subprocess
 import ast
 
-calcubot_unsecure_words = [
-        'exec',
-        'import',
-        'sys',
-        'subprocess',
-        'eval',
-        'open',
-        'file',
-        'write',
-        'read',
-        'print',
-        'compile'
-        'globals',
-        'locals',
-        'builtins',
-        'getattr',
-        'with',
-        'token',
-        'globals'
-    ]
+# Read unsecure words from file
+with open('unsecure_words.txt') as f:
+    calcubot_unsecure_words = f.readlines()
+calcubot_unsecure_words = [x.strip() for x in calcubot_unsecure_words]
+
+# Read blocked users from file
+with open('blocked_users.txt') as f:
+    blocked_users = f.readlines()
+blocked_users = [x.strip() for x in blocked_users]
 
 # Initialize FastAPI
 app = FastAPI()
@@ -50,6 +39,9 @@ async def calcubot_security(request):
             return False
     return True
 
+async def is_blocked_user(user_id):
+    return user_id in blocked_users
+
 @app.get("/test")
 async def call_test():
     logger.info('call_test')
@@ -69,13 +61,14 @@ async def secure_eval(expression, mode):
 @app.post("/message")
 async def call_message(request: Request, authorization: str = Header(None)):
     message = await request.json()
+    # Empty message
     if 'text' not in message:
         return JSONResponse(content={
             "type": "empty",
             "body": ''
-            })
-    
+        })    
     expression = message['text']
+    # Start or help
     if expression.startswith('/start') or expression.startswith('/help'):
         """link = 'https://rtlm.info/help.mp4'
         bot.send_video(message.chat.id, link,
@@ -85,9 +78,16 @@ async def call_message(request: Request, authorization: str = Header(None)):
             "body": 'This is a Python interpreter. Just type your expression and get the result. For example: 2+2'
         })
     start_from_cl = expression.startswith('/cl')
+    # Not private chat
     if not start_from_cl and not message['chat']['type'] == 'private':
         return JSONResponse(content={
-            "type": "text",
+            "type": "empty",
+            "body": ''
+        })
+    # Blocked user
+    if await is_blocked_user(str(message['from']['id'])):
+        return JSONResponse(content={
+            "type": "empty",
             "body": ''
         })
 
@@ -122,7 +122,12 @@ async def call_inline(request: Request, authorization: str = Header(None)):
     message = await request.json()
     from_user_id = message['from_user_id']
     expression = message['query']
-
+    # Blocked user
+    if await is_blocked_user(from_user_id):
+        return JSONResponse(content={
+            "type": "inline",
+            "body": []
+        })
     if not await is_complete_expression(expression):
         res = f'Incomplete expression: {expression}'
         answer = [res]
