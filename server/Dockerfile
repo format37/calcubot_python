@@ -13,5 +13,5 @@ COPY user_defined.py /server
 COPY server.py /server
 COPY blocked_users.txt /server
 COPY unsecure_words.txt /server
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--timeout", "10", "server:app"]
+CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--timeout", "15", "server:app"]
 # CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "warning"]
