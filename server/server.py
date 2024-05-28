@@ -176,7 +176,7 @@ async def call_inline(request: Request, authorization: str = Header(None)):
             )
             inline_elements.append(element)
         
-        
+        logger.info(f'[answer_inline_query] inline_query_id: {inline_query_id} inline_elements: {inline_elements}')
         bot.answer_inline_query(
             inline_query_id,
             inline_elements,
