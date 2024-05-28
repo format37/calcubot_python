@@ -30,6 +30,7 @@ bot = telebot.TeleBot(bot_token)
 
 class Message:
     def __init__(self, message):
+        logger.info(f'### [Message]: {str(message)}')
         self.message_id = message['message_id']
         self.chat = message['chat']
         self.from_user = message['from']
