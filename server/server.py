@@ -27,16 +27,50 @@ logger.setLevel(logging.INFO)
 bot_token = os.environ['BOT_TOKEN']
 bot = telebot.TeleBot(bot_token)
 
+# class Message:
+#     def __init__(self, message):
+#         logger.info(f'### [Message]: {str(message)}')
+#         # {'message_id': 11015390, 'from': {'id': 106129214, 'is_bot': False, 'first_name': 'Alex', 'username': 'format37', 'language_code': 'en', 'is_premium': True}, 'chat': {'id': 106129214, 'first_name': 'Alex', 'username': 'format37', 'type': 'private'}, 'date': 1716907673, 'text': '1+6'}
+#         self.message_id = message['message_id']        
+        
+#         self.from_user = message['from']
+#         self.
 
+#         self.chat = message['chat']
+
+#         self.text = message['text']
+#         self.date = message['date']
+#         self.type = 'message'
+
+from dataclasses import dataclass
+
+@dataclass
+class User:
+    id: int
+    is_bot: bool
+    first_name: str
+    username: str
+    language_code: str
+    is_premium: bool
+
+@dataclass
+class Chat:
+    id: int
+    first_name: str
+    username: str
+    type: str
+
+@dataclass
 class Message:
-    def __init__(self, message):
-        logger.info(f'### [Message]: {str(message)}')
-        self.message_id = message['message_id']
-        self.chat = message['chat']
-        self.from_user = message['from']
-        self.text = message['text']
-        self.date = message['date']
+    message_id: int
+    from_user: User
+    chat: Chat
+    date: int
+    text: str
 
+    def __post_init__(self):
+        self.from_user = User(**self.from_user)
+        self.chat = Chat(**self.chat)
 
 async def is_complete_expression(expression):
     try:
@@ -136,7 +170,8 @@ async def call_message(request: Request, authorization: str = Header(None)):
     # message_id = message['message_id']
     # logging.info(f'{prefix}User: {user_id} Request: {expression} Response: {response}, message_id: {message_id}')
     
-    message_instance = Message(message)
+    # message_instance = Message(message)
+    message_instance = Message(**message)
     bot.reply_to(message_instance, response)
 
     # return JSONResponse(content={
