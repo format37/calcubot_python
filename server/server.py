@@ -167,6 +167,9 @@ async def call_message(request: Request, authorization: str = Header(None)):
     #     text="This is a reply to your message.",
     #     reply_parameters=reply_parameters
     # )
+    logging.info(f'Sending message to chat id: {message["chat"]["id"]}, response: {response}')
+    logger.info(f'chat id type: {type(message["chat"]["id"])}')
+    logger.info(f'response type: {type(response)}')
     bot.send_message(message['chat']['id'], response)
 
     # return JSONResponse(content={
