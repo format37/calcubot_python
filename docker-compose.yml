@@ -8,13 +8,15 @@ services:
       - /tmp
     build: server
     # Limit cpu
-    cpus: 1
+    # cpus: 1
     logging:
       options:
         max-size: "1m"
         max-file: "3"
     ports:
       - "8704:8000"
+    environment:
+      - BOT_TOKEN=YOUR_BOT_TOKEN
 
   # calcubot_test:
   #   container_name: calcubot_test

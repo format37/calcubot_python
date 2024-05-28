@@ -3,6 +3,8 @@ from fastapi.responses import JSONResponse # , FileResponse
 import logging
 import subprocess
 import ast
+import telebot
+import os
 
 # Read unsecure words from file
 with open('unsecure_words.txt') as f:
@@ -21,6 +23,8 @@ app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
 
 async def is_complete_expression(expression):
     try:
@@ -140,6 +144,31 @@ async def call_inline(request: Request, authorization: str = Header(None)):
                     res
                 ]
     logger.info(f'User: {from_user_id} Inline request: {expression} Response: {res}')
+
+    # try:
+    #     result_message = json.loads(result.text)
+    #     answer = result_message['body']
+    #     if result_message['type'] != 'inline':
+    #         logger.error(f'Inline: Invalid response type: {result_message["type"]}')
+    #         return JSONResponse(content={"status": "ok"})
+    #     inline_elements = []
+    #     for i in range(len(answer)):    
+    #         element = telebot.types.InlineQueryResultArticle(
+    #             str(i),
+    #             answer[i],
+    #             telebot.types.InputTextMessageContent(answer[i]),
+    #         )
+    #         inline_elements.append(element)
+        
+        
+    #     bot.answer_inline_query(
+    #         inline_query_id,
+    #         inline_elements,
+    #         cache_time=0,
+    #         is_personal=True
+    #     )
+    # except Exception as e:
+    #     logger.error(f'User: {from_user_id} Inline request: {expression}  Error processing inline query: {str(e)}')
     return JSONResponse(content={
             "type": "inline",
             "body": answer
