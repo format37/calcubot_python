@@ -4,6 +4,7 @@ import logging
 import subprocess
 import ast
 import telebot
+from telebot.types import ReplyParameters
 import os
 
 # Read unsecure words from file
@@ -160,10 +161,11 @@ async def call_message(request: Request, authorization: str = Header(None)):
     
     # message_instance = Message(message)
     # bot.reply_to(message_instance, response)
+    reply_parameters = ReplyParameters(message_id=reply_to_message_id)
     bot.send_message(
         chat_id=message['chat']['id'],
         text="This is a reply to your message.",
-        reply_to_message_id=reply_to_message_id
+        reply_parameters=reply_parameters
     )
 
     # return JSONResponse(content={
