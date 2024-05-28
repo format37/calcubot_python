@@ -117,10 +117,21 @@ async def call_message(request: Request, authorization: str = Header(None)):
     response = f'{res} = {expression}'
     prefix = 'cl ' if start_from_cl else ''
     logging.info(f'{prefix}User: {user_id} Request: {expression} Response: {response}')
+
+    bot.reply_to(message, response)
+
+    # return JSONResponse(content={
+    #     "type": "text",
+    #     "body": response
+    # })
+    # Return empty
+    
+
     return JSONResponse(content={
-        "type": "text",
-        "body": response
-    })
+            "type": "empty",
+            "body": ''
+        })
+
     
 # Post inline query
 @app.post("/inline")
