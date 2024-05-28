@@ -27,6 +27,10 @@ logger.setLevel(logging.INFO)
 bot_token = os.environ['BOT_TOKEN']
 bot = telebot.TeleBot(bot_token)
 
+class MockMessage:
+    def __init__(self, message):
+        self.message_id = message['message_id']
+
 async def is_complete_expression(expression):
     try:
         # If empty string then return False
@@ -122,9 +126,11 @@ async def call_message(request: Request, authorization: str = Header(None)):
     res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]    
     response = f'{res} = {expression}'
     prefix = 'cl ' if start_from_cl else ''
-    message_id = message['message_id']
-    logging.info(f'{prefix}User: {user_id} Request: {expression} Response: {response}, message_id: {message_id}')    
-    bot.reply_to(str(message_id), response)
+    # message_id = message['message_id']
+    # logging.info(f'{prefix}User: {user_id} Request: {expression} Response: {response}, message_id: {message_id}')
+    
+    message_instance = MockMessage(message)
+    bot.reply_to(message_instance, response)
 
     # return JSONResponse(content={
     #     "type": "text",
