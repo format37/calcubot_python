@@ -65,13 +65,13 @@ async def secure_eval(expression, mode):
     
 @app.post("/message")
 async def call_message(request: Request, authorization: str = Header(None)):
-    logger.info(f'call_message. bot: {str(bot)}')
+    # logger.info(f'call_message. bot: {str(bot)}')
     message = await request.json()
-    logger.info(f'call_message: {str(message)}')
-    return JSONResponse(content={
-            "type": "empty",
-            "body": ''
-        })    
+    logger.info(f'[call_message]: {str(message)}')
+    # return JSONResponse(content={
+    #         "type": "empty",
+    #         "body": ''
+    #     })    
 
     # Empty message
     if 'text' not in message:
@@ -122,9 +122,9 @@ async def call_message(request: Request, authorization: str = Header(None)):
     res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]    
     response = f'{res} = {expression}'
     prefix = 'cl ' if start_from_cl else ''
-    logging.info(f'{prefix}User: {user_id} Request: {expression} Response: {response}')
     message_id = message['message_id']
-    bot.reply_to(message_id, response)
+    logging.info(f'{prefix}User: {user_id} Request: {expression} Response: {response}, message_id: {message_id}')    
+    # bot.reply_to(message_id, response)
 
     # return JSONResponse(content={
     #     "type": "text",
