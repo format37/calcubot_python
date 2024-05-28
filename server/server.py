@@ -65,7 +65,7 @@ async def secure_eval(expression, mode):
     
 @app.post("/message")
 async def call_message(request: Request, authorization: str = Header(None)):
-    print('bot', bot)
+    logger.info(f'call_message. bot: {str(bot)}')
     message = await request.json()
     # Empty message
     if 'text' not in message:
