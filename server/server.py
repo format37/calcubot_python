@@ -27,9 +27,15 @@ logger.setLevel(logging.INFO)
 bot_token = os.environ['BOT_TOKEN']
 bot = telebot.TeleBot(bot_token)
 
-class MockMessage:
+
+class Message:
     def __init__(self, message):
         self.message_id = message['message_id']
+        self.chat = message['chat']
+        self.from_user = message['from']
+        self.text = message['text']
+        self.date = message['date']
+
 
 async def is_complete_expression(expression):
     try:
@@ -129,7 +135,7 @@ async def call_message(request: Request, authorization: str = Header(None)):
     # message_id = message['message_id']
     # logging.info(f'{prefix}User: {user_id} Request: {expression} Response: {response}, message_id: {message_id}')
     
-    message_instance = MockMessage(message)
+    message_instance = Message(message)
     bot.reply_to(message_instance, response)
 
     # return JSONResponse(content={
