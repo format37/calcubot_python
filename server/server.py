@@ -24,7 +24,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-bot = telebot.TeleBot(os.environ['BOT_TOKEN'])
+bot_token = os.environ['BOT_TOKEN']
+bot = telebot.TeleBot(bot_token)
 
 async def is_complete_expression(expression):
     try:
@@ -64,6 +65,7 @@ async def secure_eval(expression, mode):
     
 @app.post("/message")
 async def call_message(request: Request, authorization: str = Header(None)):
+    print('bot', bot)
     message = await request.json()
     # Empty message
     if 'text' not in message:
