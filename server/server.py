@@ -117,8 +117,8 @@ async def call_message(request: Request, authorization: str = Header(None)):
     response = f'{res} = {expression}'
     prefix = 'cl ' if start_from_cl else ''
     logging.info(f'{prefix}User: {user_id} Request: {expression} Response: {response}')
-
-    bot.reply_to(message, response)
+    message_id = message['message_id']
+    bot.reply_to(message_id, response)
 
     # return JSONResponse(content={
     #     "type": "text",
