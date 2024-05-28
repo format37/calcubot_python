@@ -126,7 +126,10 @@ async def call_message(request: Request, authorization: str = Header(None)):
 @app.post("/inline")
 async def call_inline(request: Request, authorization: str = Header(None)):
     message = await request.json()
+    # from_user_id = inline_query.from_user.id
+    # inline_query_id = inline_query.id
     from_user_id = message['from_user_id']
+    inline_query_id = message['inline_query_id']
     expression = message['query']
     # Blocked user
     if await is_blocked_user(from_user_id):
@@ -147,31 +150,39 @@ async def call_inline(request: Request, authorization: str = Header(None)):
                 ]
     logger.info(f'User: {from_user_id} Inline request: {expression} Response: {res}')
 
-    # try:
-    #     result_message = json.loads(result.text)
-    #     answer = result_message['body']
-    #     if result_message['type'] != 'inline':
-    #         logger.error(f'Inline: Invalid response type: {result_message["type"]}')
-    #         return JSONResponse(content={"status": "ok"})
-    #     inline_elements = []
-    #     for i in range(len(answer)):    
-    #         element = telebot.types.InlineQueryResultArticle(
-    #             str(i),
-    #             answer[i],
-    #             telebot.types.InputTextMessageContent(answer[i]),
-    #         )
-    #         inline_elements.append(element)
+    try:
+        # result_message = json.loads(result.text)
+        # answer = result_message['body']
+        # if result_message['type'] != 'inline':
+        #     logger.error(f'Inline: Invalid response type: {result_message["type"]}')
+        #     return JSONResponse(content={"status": "ok"})
+        inline_elements = []
+        for i in range(len(answer)):    
+            element = telebot.types.InlineQueryResultArticle(
+                str(i),
+                answer[i],
+                telebot.types.InputTextMessageContent(answer[i]),
+            )
+            inline_elements.append(element)
         
         
-    #     bot.answer_inline_query(
-    #         inline_query_id,
-    #         inline_elements,
-    #         cache_time=0,
-    #         is_personal=True
-    #     )
-    # except Exception as e:
-    #     logger.error(f'User: {from_user_id} Inline request: {expression}  Error processing inline query: {str(e)}')
+        bot.answer_inline_query(
+            inline_query_id,
+            inline_elements,
+            cache_time=0,
+            is_personal=True
+        )
+    except Exception as e:
+        logger.error(f'User: {from_user_id} Inline request: {expression}  Error processing inline query: {str(e)}')
+
+    # return JSONResponse(content={
+    #         "type": "inline",
+    #         "body": answer
+    #         })
+
+    # Return empty
     return JSONResponse(content={
-            "type": "inline",
-            "body": answer
-            })
+            "type": "empty",
+            "body": ''
+        })
+
