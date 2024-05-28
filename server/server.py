@@ -67,6 +67,12 @@ async def secure_eval(expression, mode):
 async def call_message(request: Request, authorization: str = Header(None)):
     logger.info(f'call_message. bot: {str(bot)}')
     message = await request.json()
+    logger.info(f'call_message: {str(message)}')
+    return JSONResponse(content={
+            "type": "empty",
+            "body": ''
+        })    
+
     # Empty message
     if 'text' not in message:
         return JSONResponse(content={
