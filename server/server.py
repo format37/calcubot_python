@@ -155,11 +155,16 @@ async def call_message(request: Request, authorization: str = Header(None)):
     res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]    
     response = f'{res} = {expression}'
     prefix = 'cl ' if start_from_cl else ''
-    # message_id = message['message_id']
+    reply_to_message_id = message['message_id']
     # logging.info(f'{prefix}User: {user_id} Request: {expression} Response: {response}, message_id: {message_id}')
     
-    message_instance = Message(message)
-    bot.reply_to(message_instance, response)
+    # message_instance = Message(message)
+    # bot.reply_to(message_instance, response)
+    bot.send_message(
+        chat_id=message['chat']['id'],
+        text="This is a reply to your message.",
+        reply_to_message_id=reply_to_message_id
+    )
 
     # return JSONResponse(content={
     #     "type": "text",
