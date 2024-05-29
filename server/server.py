@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Header # , HTTPException
+from fastapi import FastAPI, Request, Header, Response # , HTTPException
 from fastapi.responses import JSONResponse # , FileResponse
 import logging
 import subprocess
@@ -112,6 +112,7 @@ Warm regards,
 Alex"""
 
     bot.send_message(message['chat']['id'], response)
+    return Response(content='ok', status_code=200)
 
     # return JSONResponse(content={
     #         "type": "empty",
