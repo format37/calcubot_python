@@ -103,7 +103,7 @@ async def call_message(request: Request, authorization: str = Header(None)):
     message = await request.json()
     logger.info(f'[call_message]: {str(message)}')
 
-    maintance_message = """Hello,
+    response = """Hello,
 
 This bot is currently undergoing maintenance related to migration to another server and refactoring. Please wait until June 3, 2023, for the bot to resume its normal functionality.
 I appreciate that you are using this bot and thank you for your patience and understanding during this maintenance period.
