@@ -102,6 +102,17 @@ async def call_message(request: Request, authorization: str = Header(None)):
     # logger.info(f'call_message. bot: {str(bot)}')
     message = await request.json()
     logger.info(f'[call_message]: {str(message)}')
+
+    maintance_message = """Hello,
+
+This bot is currently undergoing maintenance related to migration to another server and refactoring. Please wait until June 3, 2023, for the bot to resume its normal functionality.
+I appreciate that you are using this bot and thank you for your patience and understanding during this maintenance period.
+
+Warm regards,
+Alex"""
+
+    bot.send_message(message['chat']['id'], response)
+
     # return JSONResponse(content={
     #         "type": "empty",
     #         "body": ''
@@ -109,27 +120,30 @@ async def call_message(request: Request, authorization: str = Header(None)):
 
     # Empty message
     if 'text' not in message:
-        return JSONResponse(content={
-            "type": "empty",
-            "body": ''
-        })    
+        pass
+        # return JSONResponse(content={
+        #     "type": "empty",
+        #     "body": ''
+        # })    
     expression = message['text']
     # Start or help
     if expression.startswith('/start') or expression.startswith('/help'):
+        pass
         """link = 'https://rtlm.info/help.mp4'
         bot.send_video(message.chat.id, link,
                             reply_to_message_id=str(message))"""
-        return JSONResponse(content={
-            "type": "text",
-            "body": 'This is a Python interpreter. Just type your expression and get the result. For example: 2+2'
-        })
+        # return JSONResponse(content={
+        #     "type": "text",
+        #     "body": 'This is a Python interpreter. Just type your expression and get the result. For example: 2+2'
+        # })
     start_from_cl = expression.startswith('/cl')
     # Not private chat
     if not start_from_cl and not message['chat']['type'] == 'private':
-        return JSONResponse(content={
-            "type": "empty",
-            "body": ''
-        })
+        pass
+        # return JSONResponse(content={
+        #     "type": "empty",
+        #     "body": ''
+        # })
     # Blocked user
     if await is_blocked_user(str(message['from']['id'])):
         return JSONResponse(content={
@@ -145,12 +159,15 @@ async def call_message(request: Request, authorization: str = Header(None)):
             else:
                 body = 'This is a Python interpreter. Just type your expression and get the result. For example: /cl 2+2'
             logger.info(f'[start_from_cl] User: {message["from"]["id"]} Request: {expression}')
-            return JSONResponse(content={
-                "type": "text",
-                "body": body
-            })
+            pass
+            # return JSONResponse(content={
+            #     "type": "text",
+            #     "body": body
+            # })
         else:
             logger.info(f'[start_from_cl] User: {message["from"]["id"]} Request: {expression}')
+
+    
     answer_max_lenght = 4095
     user_id = str(message['from']['id'])
     res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]    
