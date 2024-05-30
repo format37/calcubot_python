@@ -30,9 +30,12 @@ def main():
     logger.info(f'Setting webhook url: {webhook_url}')
 
     bot.remove_webhook()
-    with open('/cert/webhook_cert.pem', 'rb') as cert_file:
-        certificate = telebot.types.InputFile(cert_file)
-    bot.set_webhook(url=webhook_url, max_connections=100, certificate=certificate)
+    if server_api_uri != '':
+        bot.set_webhook(url=webhook_url, max_connections=100)
+    else:
+        with open('/cert/webhook_cert.pem', 'rb') as cert_file:
+            certificate = telebot.types.InputFile(cert_file)
+        bot.set_webhook(url=webhook_url, max_connections=100, certificate=certificate)
 
 if __name__ == '__main__':
     main()
