@@ -76,13 +76,13 @@ async def handle(request):
     return web.Response(status=403)
 
 
-@bot.message_handler(commands=['help', 'start'])
-def send_help(message):
-    # if granted_user(message.from_user.id):
-        # link = 'https://service.icecorp.ru/help.mp4'
-        # calcubot.send_video(message.chat.id, link,
-        #                     reply_to_message_id=str(message))
-    bot.send_message(message.chat.id, '2+2')
+# @bot.message_handler(commands=['help', 'start'])
+# def send_help(message):
+#     # if granted_user(message.from_user.id):
+#         # link = 'https://service.icecorp.ru/help.mp4'
+#         # calcubot.send_video(message.chat.id, link,
+#         #                     reply_to_message_id=str(message))
+#     bot.send_message(message.chat.id, '2+2')
 
 
 async def is_blocked_user(user_id):
@@ -109,8 +109,15 @@ async def secure_eval(expression, mode):
         return 'Request is not supported'
 
 
+async def handle_message(message):
+    await calcubot_send_user(message)
+
+@bot.message_handler(func=lambda message: asyncio.run(handle_message(message)), content_types=['text'])
+async def handle_message_wrapper(message):
+    pass
+
 # @bot.message_handler(func=lambda message: True, content_types=['text'])
-@bot.message_handler(func=lambda message: asyncio.run(True), content_types=['text'])
+# @bot.message_handler(func=lambda message: asyncio.run(True), content_types=['text'])
 async def calcubot_send_user(message):
     # Empty message
     if 'text' not in message:
