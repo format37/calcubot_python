@@ -109,19 +109,19 @@ async def secure_eval(expression, mode):
         return 'Request is not supported'
 
 
-# async def handle_message(message):
-#     logger.info(f'handle_message: {message}')
-#     await calcubot_send_user(message)
+async def handle_message(message):
+    logger.info(f'handle_message')
+    await calcubot_send_user(message)
 
-# @bot.message_handler(func=lambda message: asyncio.run(handle_message(message)), content_types=['text'])
-# async def handle_message_wrapper(message):
-#     logger.info(f'handle_message_wrapper: {message}')
-#     pass
+@bot.message_handler(func=lambda message: asyncio.run(handle_message(message)), content_types=['text'])
+async def handle_message_wrapper(message):
+    logger.info(f'handle_message_wrapper')
+    pass
 
 # @bot.message_handler(func=lambda message: True, content_types=['text'])
-@bot.message_handler(func=lambda message: asyncio.run(True), content_types=['text'])
+# @bot.message_handler(func=lambda message: asyncio.run(True), content_types=['text'])
 async def calcubot_send_user(message):
-    logger.info(f'calcubot_send_user: {message}')
+    logger.info(f'calcubot_send_user')
     # Empty message+
     if 'text' not in message:
         pass
@@ -155,6 +155,7 @@ async def calcubot_send_user(message):
         # })
     # Blocked user
     if await is_blocked_user(str(message['from']['id'])):
+        logger.info(f'Blocked user: {message["from"]["id"]}')
         # Return ok, http 200
         return web.Response(content='ok', status_code=200)
 
