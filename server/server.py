@@ -49,6 +49,15 @@ def default_bot_init(config):
     API_TOKEN = config['TOKEN']
     bot_object = telebot.TeleBot(API_TOKEN)
 
+    server_api_uri = config['SERVER_API_URI']
+    server_file_url = config['SERVER_FILE_URL']
+    if server_api_uri != '':
+        telebot.apihelper.API_URL = server_api_uri
+        logger.info(f'Setting API_URL: {server_api_uri} for bot {config["TOKEN"]}')
+    if server_file_url != '':
+        telebot.apihelper.FILE_URL = server_file_url
+        logger.info(f'Setting FILE_URL: {server_file_url} for bot {config["TOKEN"]}')
+
     # WEBHOOK_URL_BASE = "http://{}:{}".format(
     #     os.environ.get('WEBHOOK_HOST', ''),
     #     os.environ.get('WEBHOOK_PORT', '')
