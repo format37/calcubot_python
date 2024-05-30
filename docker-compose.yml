@@ -3,7 +3,7 @@ services:
   calcubot:
     container_name: calcubot
     restart: always
-    read_only: true
+    # read_only: true
     tmpfs:
       - /tmp
     build: server
@@ -17,6 +17,8 @@ services:
       - "8704:8000"
     environment:
       - BOT_TOKEN=YOUR_BOT_TOKEN
+    volumes:
+      - ./id_garden:/server/id_garden
 
   # calcubot_test:
   #   container_name: calcubot_test
