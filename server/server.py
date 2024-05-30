@@ -1,269 +1,214 @@
-from fastapi import FastAPI, Request, Header, Response # , HTTPException
-from fastapi.responses import JSONResponse # , FileResponse
-import logging
-import subprocess
-import ast
+from fastapi import FastAPI, Request, Response
 import telebot
-from telebot.types import ReplyParameters
+from telebot import types
+import logging
+import json
+import requests
 import os
-
-# Read unsecure words from file
-with open('unsecure_words.txt') as f:
-    calcubot_unsecure_words = f.readlines()
-calcubot_unsecure_words = [x.strip() for x in calcubot_unsecure_words]
-
-# Read blocked users from file
-with open('blocked_users.txt') as f:
-    blocked_users = f.readlines()
-blocked_users = [x.strip() for x in blocked_users]
-
-# Initialize FastAPI
-app = FastAPI()
+import time
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-bot_token = os.environ['BOT_TOKEN']
-bot = telebot.TeleBot(bot_token)
+# Initialize FastAPI
+app = FastAPI()
 
-# {'message_id': 11015390, 'from': {'id': 106129214, 'is_bot': False, 'first_name': 'Alex', 'username': 'format37', 'language_code': 'en', 'is_premium': True}, 'chat': {'id': 106129214, 'first_name': 'Alex', 'username': 'format37', 'type': 'private'}, 'date': 1716907673, 'text': '1+6'}
+# Initialize bot variable
+bot = None
 
-class From:
-    def __init__(self, from_user):
-        self.id = from_user['id']
-        self.is_bot = from_user['is_bot']
-        self.first_name = from_user['first_name']
-        self.username = from_user['username']
-        self.language_code = from_user['language_code']
-        self.is_premium = from_user['is_premium']
+garden_queue = -1
 
-class Chat:
-    def __init__(self, chat):
-        self.id = chat['id']
-        self.first_name = chat['first_name']
-        self.username = chat['username']
-        self.type = chat['type']
-
-class Message:
-    def __init__(self, message):
-        logger.info(f'### [Message]: {str(message)}')
-        
-        self.message_id = message['message_id']        
-        
-        self.from_user = From(message['from'])
-        self.chat = Chat(message['chat'])
-
-        self.text = message['text']
-        self.date = message['date']
-        self.type = 'message'
-
-
-
-async def is_complete_expression(expression):
-    try:
-        # If empty string then return False
-        if expression.strip() == '':
-            return False
-        ast.parse(expression)
-        return True
-    except SyntaxError:
-        return False
-
-async def calcubot_security(request):
-    # Check is request sequre:
-    for word in calcubot_unsecure_words:
-        if word in request:
-            return False
-    return True
-
-async def is_blocked_user(user_id):
-    return user_id in blocked_users
+# Your routes would go here
+@app.get("/")
+async def read_root():
+    return Response("ok", status_code=200)
 
 @app.get("/test")
 async def call_test():
-    logger.info('call_test')
-    return JSONResponse(content={"status": "ok"})
+    logger.info('Test endpoint called')
+    return Response("ok", status_code=200)
 
-async def secure_eval(expression, mode):
-    if await calcubot_security(expression):
-        ExpressionOut = subprocess.Popen(
-        ['python3', 'calculate_'+mode+'.py',expression],
-        stdout=subprocess.PIPE, 
-        stderr=subprocess.STDOUT)
-        stdout,stderr = ExpressionOut.communicate()
-        return( stdout.decode("utf-8").replace('\n','') )
+# Simple text message handler function
+def handle_text_message(message, bot_config):
+    start_time = time.time()
+    if message.chat.type != 'private' and 'group_starters' in bot_config:
+        granted_message = False
+        for group_starter in bot_config['group_starters']:
+            if message.text.startswith(group_starter):
+                granted_message = True
+                break
+        if not granted_message:
+            return Response("ok", status_code=200)
+
+    logger.info(f'[{len(bot_config["group_starters"])}] handle_text_message {message.chat.type} message from {message.chat.id}: {message.text}')
+    body = message.json
+    
+    # BOT_PORT = bot_config['PORT']
+
+    # message_url = f'http://localhost:{BOT_PORT}/message'
+    # headers = {'Authorization': f'Bearer {bot.token}'}
+    # result = requests.post(message_url, json=body, headers=headers, timeout=1)
+
+    end_time = time.time()
+    logger.info(f'handle_text_message: Time taken: {end_time - start_time}')
+
+    return Response("ok", status_code=200)
+
+
+def handle_inline_query(inline_query, bot_config):
+    start_time = time.time()
+    
+    results = []
+    BOT_PORT = bot_config['PORT']
+    inline_query_url = f'http://localhost:{BOT_PORT}/inline'
+    headers = {'Authorization': f'Bearer {bot.token}'}
+    body = {
+        "from_user_id": inline_query.from_user.id,
+        "inline_query_id": inline_query.id,
+        "query": inline_query.query
+    }
+
+    message_text = 'Inline is temporarily disabled. Please try again later.'
+    curent_r = telebot.types.InlineQueryResultArticle(
+        '0',
+        message_text,
+        telebot.types.InputTextMessageContent(message_text),
+    )
+    results.append(curent_r)
+
+    bot.answer_inline_query(inline_query.id, results, cache_time=0, is_personal=True)
+
+    end_time = time.time()
+    logger.info(f'handle_inline_query: Time taken: {end_time - start_time}')
+    return Response("ok", status_code=200)
+
+# Initialize bot
+async def init_bot(bot_config):
+    global bot
+    bot = telebot.TeleBot(bot_config['TOKEN'])
+
+    content_types=[
+        'text',
+        'photo',
+        'document',
+        'audio',
+        'video',
+        'sticker',
+        'contact',
+        'location',
+        'venue',
+        'voice',
+        'video_note',
+        'new_chat_members',
+        'left_chat_member',
+        'new_chat_title',
+        'new_chat_photo',
+        'delete_chat_photo',
+        'group_chat_created',
+        'supergroup_chat_created',
+        'channel_chat_created',
+        'migrate_to_chat_id',
+        'migrate_from_chat_id',
+        'pinned_message',
+        'invoice',
+        'successful_payment',
+        'connected_website',
+        'passport_data',
+        'proximity_alert_triggered',
+        'dice',
+        'poll',
+        'poll_answer',
+        'my_chat_member',
+        'chat_member'
+    ]
+    
+    @bot.message_handler(content_types=content_types)
+    def message_handler(message):
+        handle_text_message(message, bot_config)
+
+    @bot.callback_query_handler(func=lambda call: True)
+    def callback_query_handler(call):
+        pass
+
+    @bot.inline_handler(func=lambda query: True)
+    def inline_query_handler(query):
+        handle_inline_query(query, bot_config)
+
+    with open('config.json') as config_file:
+        config = json.load(config_file)
+
+    logger.info(f'Garden Queue: {garden_queue}')
+
+    server_api_uri = config['SERVER_API_URI']
+    server_file_url = config['SERVER_FILE_URL']
+    if server_api_uri != '':
+        telebot.apihelper.API_URL = server_api_uri
+        logger.info(f'Setting API_URL: {server_api_uri} for bot {bot_config["TOKEN"]}')
+    if server_file_url != '':
+        telebot.apihelper.FILE_URL = server_file_url
+        logger.info(f'Setting FILE_URL: {server_file_url} for bot {bot_config["TOKEN"]}')
+    
+    webhook_url = f"https://{config['WEBHOOK_HOST']}:{config['WEBHOOK_PORT']}/{bot_config['TOKEN']}/"
+    logger.info(f'Setting webhook url: {webhook_url}')
+    if garden_queue == 0:
+        bot.remove_webhook()
+        with open('/cert/webhook_cert.pem', 'rb') as cert_file:
+            certificate = types.InputFile(cert_file)
+        bot.set_webhook(url=webhook_url, max_connections=100, certificate=certificate)
     else:
-        return 'Request is not supported'
-    
-@app.post("/message")
-async def call_message(request: Request, authorization: str = Header(None)):
-    # logger.info(f'call_message. bot: {str(bot)}')
-    message = await request.json()
-    logger.info(f'[call_message]: {str(message)}')
+        pid = int(os.getpid())
+        time_to_sleep = 1+pid/10
+        logger.info(f'### Sleeping for {time_to_sleep} seconds')
+        time.sleep(time_to_sleep)
 
-    response = """Hello,
-
-This bot is currently undergoing maintenance related to migration to another server and refactoring. Please wait until June 3, 2023, for the bot to resume its normal functionality.
-I appreciate that you are using this bot and thank you for your patience and understanding during this maintenance period.
-
-Warm regards,
-Alex"""
-
-    bot.send_message(message['chat']['id'], response)
-    return Response(content='ok', status_code=200)
-
-    # return JSONResponse(content={
-    #         "type": "empty",
-    #         "body": ''
-    #     })    
-
-    # Empty message
-    if 'text' not in message:
-        pass
-        # return JSONResponse(content={
-        #     "type": "empty",
-        #     "body": ''
-        # })    
-    expression = message['text']
-    # Start or help
-    if expression.startswith('/start') or expression.startswith('/help'):
-        pass
-        """link = 'https://rtlm.info/help.mp4'
-        bot.send_video(message.chat.id, link,
-                            reply_to_message_id=str(message))"""
-        # return JSONResponse(content={
-        #     "type": "text",
-        #     "body": 'This is a Python interpreter. Just type your expression and get the result. For example: 2+2'
-        # })
-    start_from_cl = expression.startswith('/cl')
-    # Not private chat
-    if not start_from_cl and not message['chat']['type'] == 'private':
-        pass
-        # return JSONResponse(content={
-        #     "type": "empty",
-        #     "body": ''
-        # })
-    # Blocked user
-    if await is_blocked_user(str(message['from']['id'])):
-        return JSONResponse(content={
-            "type": "empty",
-            "body": ''
-        })
-
-    if start_from_cl:
-        expression = expression[4:]
-        if expression.strip() == '':
-            if message['chat']['type'] == 'private':
-                body = 'This is a Python interpreter. Just type your expression and get the result. For example: 2+2'
-            else:
-                body = 'This is a Python interpreter. Just type your expression and get the result. For example: /cl 2+2'
-            logger.info(f'[start_from_cl] User: {message["from"]["id"]} Request: {expression}')
-            pass
-            # return JSONResponse(content={
-            #     "type": "text",
-            #     "body": body
-            # })
-        else:
-            logger.info(f'[start_from_cl] User: {message["from"]["id"]} Request: {expression}')
-
-    
-    answer_max_lenght = 4095
-    user_id = str(message['from']['id'])
-    res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]    
-    response = f'{res} = {expression}'
-    prefix = 'cl ' if start_from_cl else ''
-    reply_to_message_id = message['message_id']
-    # logging.info(f'{prefix}User: {user_id} Request: {expression} Response: {response}, message_id: {message_id}')
-    
-    # message_instance = Message(message)
-    # bot.reply_to(message_instance, response)
-    reply_parameters = ReplyParameters(message_id=reply_to_message_id)
-    # bot.send_message(
-    #     chat_id=message['chat']['id'],
-    #     text="This is a reply to your message.",
-    #     reply_parameters=reply_parameters
-    # )
-    logging.info(f'Sending message to chat id: {message["chat"]["id"]}, response: {response}')
-    logger.info(f'chat id type: {type(message["chat"]["id"])}')
-    logger.info(f'response type: {type(response)}')
-    bot.send_message(message['chat']['id'], response)
-
-    # return JSONResponse(content={
-    #     "type": "text",
-    #     "body": response
-    # })
-    # Return empty
-    
-
-    return JSONResponse(content={
-            "type": "empty",
-            "body": ''
-        })
-
-    
-# Post inline query
-@app.post("/inline")
-async def call_inline(request: Request, authorization: str = Header(None)):
-    message = await request.json()
-    # from_user_id = inline_query.from_user.id
-    # inline_query_id = inline_query.id
-    from_user_id = message['from_user_id']
-    inline_query_id = message['inline_query_id']
-    expression = message['query']
-    # Blocked user
-    if await is_blocked_user(from_user_id):
-        return JSONResponse(content={
-            "type": "inline",
-            "body": []
-        })
-    if not await is_complete_expression(expression):
-        res = f'Incomplete expression: {expression}'
-        answer = [res]
+@app.post("/{token}/")
+async def handle_request(token: str, request: Request):
+    if token == bot.token: 
+        if bot is None or bot == "":
+            logger.error(f'[x] handle_request: Bot is inactive')
+            return Response("ok", status_code=200)
+        request_body_dict = await request.json()
+        try:
+            update = telebot.types.Update.de_json(request_body_dict)
+            bot.process_new_updates([update])
+            return Response("ok", status_code=200)
+        except Exception as e:
+            logger.error(f'[x] handle_request: Error processing request: {str(e)}')
+            return Response("ok", status_code=200)
     else:
-        answer_max_lenght       = 4095
-        res = str(await secure_eval(expression, 'inline'))[:answer_max_lenght]
-        answer  = [
-                    res + ' = ' + expression,
-                    expression + ' = ' + res,
-                    res
-                ]
-    logger.info(f'User: {from_user_id} Inline request: {expression} Response: {res}')
+        logger.error(f'[x] handle_request: Invalid token: {token}')
+        return Response("ok", status_code=200)
 
-    try:
-        # result_message = json.loads(result.text)
-        # answer = result_message['body']
-        # if result_message['type'] != 'inline':
-        #     logger.error(f'Inline: Invalid response type: {result_message["type"]}')
-        #     return JSONResponse(content={"status": "ok"})
-        inline_elements = []
-        for i in range(len(answer)):    
-            element = telebot.types.InlineQueryResultArticle(
-                str(i),
-                answer[i],
-                telebot.types.InputTextMessageContent(answer[i]),
-            )
-            inline_elements.append(element)
-        
-        logger.info(f'[answer_inline_query] inline_query_id: {inline_query_id} inline_elements: {inline_elements}')
-        bot.answer_inline_query(
-            inline_query_id,
-            inline_elements,
-            cache_time=0,
-            is_personal=True
-        )
-    except Exception as e:
-        logger.error(f'User: {from_user_id} Inline request: {expression}  Error processing inline query: {str(e)}')
 
-    # return JSONResponse(content={
-    #         "type": "inline",
-    #         "body": answer
-    #         })
+def fill_id_garden():
+    garden_folder = './id_garden'
+    pid = os.getpid()
+    logger.info(f'garden PID: {pid}')
+    with open(f'{garden_folder}/{pid}', 'w') as f:
+        f.write('')
+    instances = os.getenv('INSTANCES', '1')
+    logger.info(f'garden waiting for reaching {instances} instances')
+    while len(os.listdir(garden_folder)) < int(instances):
+        time.sleep(1)
+    queue = sorted(os.listdir(garden_folder)).index(str(pid))
+    logger.info(f'garden Queue: {queue}')
+    return queue
 
-    # Return empty
-    return JSONResponse(content={
-            "type": "empty",
-            "body": ''
-        })
+async def main():
+    global garden_queue
+    garden_queue = fill_id_garden()
 
+    with open('bot_config.json') as bot_file:
+        bot_config = json.load(bot_file)
+
+    if int(bot_config['active']):
+        await init_bot(bot_config)
+        logger.info(f'Bot initialized with webhook')
+    else:
+        logger.info(f'Bot is inactive')
+
+@app.on_event("startup")
+async def startup_event():
+    await main()
