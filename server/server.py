@@ -4,19 +4,8 @@ from aiohttp import web
 import telebot
 import json
 import logging
+import subprocess
 from datetime import datetime as dt
-
-
-logging.basicConfig(level=logging.INFO)
-logging.getLogger('aiohttp.access').setLevel(logging.WARNING)
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-
-async def call_test(request):
-    logging.info('call_test')
-    content = "get ok"
-    return web.Response(text=content, content_type="text/html")
 
 
 def default_bot_init(config):
@@ -46,6 +35,34 @@ def default_bot_init(config):
     return bot_object
 
 
+# Global variables ++
+logging.basicConfig(level=logging.INFO)
+logging.getLogger('aiohttp.access').setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Read unsecure words from file
+with open('unsecure_words.txt') as f:
+    calcubot_unsecure_words = f.readlines()
+calcubot_unsecure_words = [x.strip() for x in calcubot_unsecure_words]
+
+# Read blocked users from file
+with open('blocked_users.txt') as f:
+    blocked_users = f.readlines()
+blocked_users = [x.strip() for x in blocked_users]
+
+with open('config.json') as config_file:
+    config = json.load(config_file)
+bot = default_bot_init(config)
+# Global variables --
+
+
+async def call_test(request):
+    logging.info('call_test')
+    content = "get ok"
+    return web.Response(text=content, content_type="text/html")
+
+
 # Process webhook calls
 async def handle(request):
     if request.match_info.get('token') == bot.token:
@@ -55,9 +72,6 @@ async def handle(request):
         return web.Response()
     return web.Response(status=403)
 
-with open('config.json') as config_file:
-    config = json.load(config_file)
-bot = default_bot_init(config)
 
 @bot.message_handler(commands=['help', 'start'])
 def send_help(message):
@@ -67,10 +81,119 @@ def send_help(message):
         #                     reply_to_message_id=str(message))
     bot.send_message(message.chat.id, '2+2')
 
+
+async def is_blocked_user(user_id):
+    return user_id in blocked_users
+
+
+async def calcubot_security(request):
+    # Check is request sequre:
+    for word in calcubot_unsecure_words:
+        if word in request:
+            return False
+    return True
+
+
+async def secure_eval(expression, mode):
+    if await calcubot_security(expression):
+        ExpressionOut = subprocess.Popen(
+        ['python3', 'calculate_'+mode+'.py',expression],
+        stdout=subprocess.PIPE, 
+        stderr=subprocess.STDOUT)
+        stdout,stderr = ExpressionOut.communicate()
+        return( stdout.decode("utf-8").replace('\n','') )
+    else:
+        return 'Request is not supported'
+
+
 @bot.message_handler(func=lambda message: True, content_types=['text'])
-def calcubot_send_user(message):
+async def calcubot_send_user(message):
+    # Empty message
+    if 'text' not in message:
+        pass
+        # return JSONResponse(content={
+        #     "type": "empty",
+        #     "body": ''
+        # })    
+    expression = message['text']
+    # Start or help
+    if expression.startswith('/start') or expression.startswith('/help'):
+        # Send message "2+2"
+        bot.send_message(message.chat.id, '2+2')
+        # Return ok, http 200
+        return web.Response(content='ok', status_code=200)
+        """link = 'https://rtlm.info/help.mp4'
+        bot.send_video(message.chat.id, link,
+                            reply_to_message_id=str(message))"""
+        # return JSONResponse(content={
+        #     "type": "text",
+        #     "body": 'This is a Python interpreter. Just type your expression and get the result. For example: 2+2'
+        # })
+
+    start_from_cl = expression.startswith('/cl')
+    # Not private chat
+    if not start_from_cl and not message['chat']['type'] == 'private':
+        pass
+        # return web.Response(content='ok', status_code=200)
+        # return JSONResponse(content={
+        #     "type": "empty",
+        #     "body": ''
+        # })
+    # Blocked user
+    if await is_blocked_user(str(message['from']['id'])):
+        # Return ok, http 200
+        return web.Response(content='ok', status_code=200)
+
+    if start_from_cl:
+        expression = expression[4:]
+        if expression.strip() == '':
+            if message['chat']['type'] == 'private':
+                body = 'This is a Python interpreter. Just type your expression and get the result. For example: 2+2'
+            else:
+                body = 'This is a Python interpreter. Just type your expression and get the result. For example: /cl 2+2'
+            logger.info(f'[start_from_cl] User: {message["from"]["id"]} Request: {expression}')
+            pass
+            # return JSONResponse(content={
+            #     "type": "text",
+            #     "body": body
+            # })
+        else:
+            logger.info(f'[start_from_cl] User: {message["from"]["id"]} Request: {expression}')
+
     
-    bot.reply_to(message, 'Service unavailable')
+    answer_max_lenght = 4095
+    user_id = str(message['from']['id'])
+    res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]    
+    response = f'{res} = {expression}'
+    prefix = 'cl ' if start_from_cl else ''
+    reply_to_message_id = message['message_id']
+    # logging.info(f'{prefix}User: {user_id} Request: {expression} Response: {response}, message_id: {message_id}')
+    
+    # message_instance = Message(message)
+    # bot.reply_to(message_instance, response)
+    # reply_parameters = ReplyParameters(message_id=reply_to_message_id)
+    # bot.send_message(
+    #     chat_id=message['chat']['id'],
+    #     text="This is a reply to your message.",
+    #     reply_parameters=reply_parameters
+    # )
+    logging.info(f'Sending message to chat id: {message["chat"]["id"]}, response: {response}')
+    logger.info(f'chat id type: {type(message["chat"]["id"])}')
+    logger.info(f'response type: {type(response)}')
+    bot.send_message(message['chat']['id'], response)
+
+    # return JSONResponse(content={
+    #     "type": "text",
+    #     "body": response
+    # })
+    # Return empty
+    
+
+    # return JSONResponse(content={
+    #         "type": "empty",
+    #         "body": ''
+    #     })
+    # bot.reply_to(message, 'Service unavailable')
 
 @bot.inline_handler(func=lambda chosen_inline_result: True)
 def calcubot_query_text(inline_query):
