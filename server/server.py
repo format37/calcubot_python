@@ -124,6 +124,7 @@ async def calcubot_send_user(message):
     logger.info(f'calcubot_send_user')
     # Empty message+
     if 'text' not in message:
+        logger.info(f'Empty message')
         pass
         # return JSONResponse(content={
         #     "type": "empty",
@@ -132,6 +133,7 @@ async def calcubot_send_user(message):
     expression = message['text']
     # Start or help
     if expression.startswith('/start') or expression.startswith('/help'):
+        logger.info(f'Start or help')
         # Send message "2+2"
         bot.send_message(message.chat.id, '2+2')
         # Return ok, http 200
@@ -147,6 +149,7 @@ async def calcubot_send_user(message):
     start_from_cl = expression.startswith('/cl')
     # Not private chat
     if not start_from_cl and not message['chat']['type'] == 'private':
+        logger.info(f'Not private chat')
         pass
         # return web.Response(content='ok', status_code=200)
         # return JSONResponse(content={
@@ -160,6 +163,7 @@ async def calcubot_send_user(message):
         return web.Response(content='ok', status_code=200)
 
     if start_from_cl:
+        logger.info(f'start_from_cl expression: {expression}')
         expression = expression[4:]
         if expression.strip() == '':
             if message['chat']['type'] == 'private':
