@@ -152,16 +152,16 @@ async def init_bot(bot_config):
     
     webhook_url = f"https://{config['WEBHOOK_HOST']}:{config['WEBHOOK_PORT']}/{bot_config['TOKEN']}/"
     logger.info(f'Setting webhook url: {webhook_url}')
-    if garden_queue == 0:
-        bot.remove_webhook()
-        with open('/cert/webhook_cert.pem', 'rb') as cert_file:
-            certificate = types.InputFile(cert_file)
-        bot.set_webhook(url=webhook_url, max_connections=100, certificate=certificate)
-    else:
-        pid = int(os.getpid())
-        time_to_sleep = 1+pid/10
-        logger.info(f'### Sleeping for {time_to_sleep} seconds')
-        time.sleep(time_to_sleep)
+    # if garden_queue == 0:
+    #     bot.remove_webhook()
+    #     with open('/cert/webhook_cert.pem', 'rb') as cert_file:
+    #         certificate = types.InputFile(cert_file)
+    #     bot.set_webhook(url=webhook_url, max_connections=100, certificate=certificate)
+    # else:
+    #     pid = int(os.getpid())
+    #     time_to_sleep = 1+pid/10
+    #     logger.info(f'### Sleeping for {time_to_sleep} seconds')
+    #     time.sleep(time_to_sleep)
 
 @app.post("/{token}/")
 async def handle_request(token: str, request: Request):
