@@ -13,8 +13,9 @@ services:
       options:
         max-size: "1m"
         max-file: "3"
-    ports:
-      - "8704:8000"
+    # ports:
+    #   - "8704:8000"
+    network_mode: "host"
     volumes:
       - ./config.json:/server/config.json
       - ./bot_config.json:/server/bot_config.json
