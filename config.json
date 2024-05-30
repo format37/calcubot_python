@@ -1,0 +1,6 @@
+{
+    "WEBHOOK_HOST":"YOUR-DOMAIN.COM",
+    "WEBHOOK_PORT":"8443",
+    "SERVER_API_URI": "http://localhost:8081/bot{0}/{1}",
+    "SERVER_FILE_URL": "http://localhost:8081"
+}
