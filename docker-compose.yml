@@ -3,9 +3,9 @@ services:
   calcubot:
     container_name: calcubot_test
     # restart: always
-    # read_only: true
-    tmpfs:
-      - /tmp
+    read_only: true
+    # tmpfs:
+    #   - /tmp
     build: server
     # Limit cpu
     # cpus: 1
@@ -13,15 +13,16 @@ services:
       options:
         max-size: "1m"
         max-file: "3"
-    # ports:
-    #   - "8704:8000"
-    network_mode: "host"
+    ports:
+      - "8000:8000"
+      - "8081:8081"
+    # network_mode: "host"
     volumes:
-      - /etc/letsencrypt/live/YOUR-DOMAIN.COM/fullchain.pem:/cert/webhook_cert.pem
-      - /etc/letsencrypt/live/YOUR-DOMAIN.COM/privkey.pem:/cert/webhook_pkey.pem
+      # - /etc/letsencrypt/live/YOUR-DOMAIN.COM/fullchain.pem:/cert/webhook_cert.pem
+      # - /etc/letsencrypt/live/YOUR-DOMAIN.COM/privkey.pem:/cert/webhook_pkey.pem
       - ./config.json:/server/config.json
-      - ./bot_config.json:/server/bot_config.json
-      - ./id_garden:/server/id_garden
+      # - ./bot_config.json:/server/bot_config.json
+      # - ./id_garden:/server/id_garden
 
   # calcubot_test:
   #   container_name: calcubot_test
