@@ -23,7 +23,7 @@ logging.getLogger('aiohttp.access').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-WEBHOOK_HOST = os.environ.get('WEBHOOK_HOST', '')
+# WEBHOOK_HOST = os.environ.get('WEBHOOK_HOST', '')
 # 443, 80, 88 or 8443 (port need to be 'open')
 # WEBHOOK_PORT = os.environ.get('WEBHOOK_PORT', '')
 WEBHOOK_LISTEN = '0.0.0.0'  # In some VPS you may need to put here the IP addr
@@ -63,7 +63,7 @@ def default_bot_init(config):
     #     os.environ.get('WEBHOOK_PORT', '')
     # )
     # WEBHOOK_URL_PATH = "/{}/".format(API_TOKEN)
-    webhook_url = f"{config['WEBHOOK_URL']}/{config['TOKEN']}/"
+    webhook_url = f"http://{config['WEBHOOK_HOST']}:{config['WEBHOOK_PORT']}/{config['TOKEN']}/"
     logger.info(f'Setting webhook url: {webhook_url}')
 
     # Remove webhook, it fails sometimes the set if there is a previous webhook
@@ -293,7 +293,7 @@ def main():
     # Start aiohttp server
     web.run_app(
         app,
-        host=WEBHOOK_LISTEN,
+        host=config['WEBHOOK_HOST'],
         port=config['WEBHOOK_PORT'],
         # ssl_context=context
     )

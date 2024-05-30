@@ -1,5 +1,6 @@
 {
-    "WEBHOOK_URL":"http://localhost:8000",
+    "WEBHOOK_HOST":"localhost",
+    "WEBHOOK_PORT":"8000",
     "SERVER_API_URI": "http://localhost:8081/bot{0}/{1}",
     "SERVER_FILE_URL": "http://localhost:8081",
     "TOKEN": "TELEGRAM-BOT-TOKEN"
