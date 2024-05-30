@@ -110,16 +110,19 @@ async def secure_eval(expression, mode):
 
 
 async def handle_message(message):
+    logger.info(f'handle_message: {message}')
     await calcubot_send_user(message)
 
 @bot.message_handler(func=lambda message: asyncio.run(handle_message(message)), content_types=['text'])
 async def handle_message_wrapper(message):
+    logger.info(f'handle_message_wrapper: {message}')
     pass
 
 # @bot.message_handler(func=lambda message: True, content_types=['text'])
 # @bot.message_handler(func=lambda message: asyncio.run(True), content_types=['text'])
 async def calcubot_send_user(message):
-    # Empty message
+    logger.info(f'calcubot_send_user: {message}')
+    # Empty message+
     if 'text' not in message:
         pass
         # return JSONResponse(content={
