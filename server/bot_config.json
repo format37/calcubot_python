@@ -1,26 +1,9 @@
 {
-    "PARTNERS_ICEBERG_BOT":{
-        "PORT": 7401,
-        "TOKEN": "",
-        "bot": "",
-        "active": 1,
-        "SERVER_API_URI": "http://localhost:8081/bot{0}/{1}",
-        "SERVER_FILE_URL": "http://localhost:8081"
-    },
-    "MRM_INFO_BOT":{
-        "PORT": 7402,
-        "TOKEN": "",
-        "bot": "",
-        "active": 1,
-        "SERVER_API_URI": "",
-        "SERVER_FILE_URL": ""
-    },
-    "GPT_INSTRUCTOR_BOT":{
-        "PORT": 7403,
-        "TOKEN": "",
-        "bot": "",
-        "active": 1,
-        "SERVER_API_URI": "",
-        "SERVER_FILE_URL": ""
-    }
+    "PORT": 8705,
+    "TOKEN": "",
+    "bot": "",
+    "group_starters": ["/cl "],
+    "active": 1,
+    "SERVER_API_URI": "http://localhost:8081/bot{0}/{1}",
+    "SERVER_FILE_URL": "http://localhost:8081"
 }
