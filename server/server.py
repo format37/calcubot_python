@@ -1,217 +1,294 @@
-from fastapi import FastAPI, Request, Response
-import telebot
-from telebot import types
-import logging
-import json
-import requests
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# import ssl
 import os
-import time
+# from urllib import request
+import requests
+from aiohttp import web
+import telebot
+import json
+import logging
+# import pandas as pd
+from datetime import datetime as dt
+import re
+# import pickle
+# import csv
+# import tempfile
+# import uuid
 
-# Initialize logging
+# init logging
 logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.WARNING)
+logging.getLogger('aiohttp.access').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-# Initialize FastAPI
-app = FastAPI()
+WEBHOOK_HOST = os.environ.get('WEBHOOK_HOST', '')
+# 443, 80, 88 or 8443 (port need to be 'open')
+WEBHOOK_PORT = os.environ.get('WEBHOOK_PORT', '')
+WEBHOOK_LISTEN = '0.0.0.0'  # In some VPS you may need to put here the IP addr
+# WEBHOOK_SSL_CERT = 'webhook_cert.pem'
+# WEBHOOK_SSL_PRIV = 'webhook_pkey.pem'
 
-# Initialize bot variable
-bot = None
+# Quick'n'dirty SSL certificate generation:
+#
+# openssl genrsa -out webhook_pkey.pem 2048
+# openssl req -new -x509 -days 3650 -key webhook_pkey.pem -out webhook_cert.pem
+#
+# When asked for "Common Name (e.g. server FQDN or YOUR name)" you should reply
+# with the same value in you put in WEBHOOK_HOST
 
-garden_queue = -1
-
-# Your routes would go here
-@app.get("/")
-async def read_root():
-    return Response("ok", status_code=200)
-
-@app.get("/test")
-async def call_test():
-    logger.info('Test endpoint called')
-    return Response("ok", status_code=200)
-
-# Simple text message handler function
-def handle_text_message(message, bot_config):
-    start_time = time.time()
-    if message.chat.type != 'private' and 'group_starters' in bot_config:
-        granted_message = False
-        for group_starter in bot_config['group_starters']:
-            if message.text.startswith(group_starter):
-                granted_message = True
-                break
-        if not granted_message:
-            return Response("ok", status_code=200)
-
-    logger.info(f'[{len(bot_config["group_starters"])}] handle_text_message {message.chat.type} message from {message.chat.id}: {message.text}')
-    body = message.json
-    
-    # BOT_PORT = bot_config['PORT']
-
-    # message_url = f'http://localhost:{BOT_PORT}/message'
-    # headers = {'Authorization': f'Bearer {bot.token}'}
-    # result = requests.post(message_url, json=body, headers=headers, timeout=1)
-
-    end_time = time.time()
-    logger.info(f'handle_text_message: Time taken: {end_time - start_time}')
-
-    return Response("ok", status_code=200)
+async def call_test(request):
+    logging.info('call_test')
+    content = "get ok"
+    return web.Response(text=content, content_type="text/html")
 
 
-def handle_inline_query(inline_query, bot_config):
-    start_time = time.time()
-    
-    results = []
-    BOT_PORT = bot_config['PORT']
-    inline_query_url = f'http://localhost:{BOT_PORT}/inline'
-    headers = {'Authorization': f'Bearer {bot.token}'}
-    body = {
-        "from_user_id": inline_query.from_user.id,
-        "inline_query_id": inline_query.id,
-        "query": inline_query.query
-    }
+def default_bot_init(config):
+    logger.info(f'default_bot_init')
+    API_TOKEN = config['TOKEN']
+    bot_object = telebot.TeleBot(API_TOKEN)
 
-    message_text = 'Inline is temporarily disabled. Please try again later.'
-    curent_r = telebot.types.InlineQueryResultArticle(
-        '0',
-        message_text,
-        telebot.types.InputTextMessageContent(message_text),
-    )
-    results.append(curent_r)
+    # WEBHOOK_URL_BASE = "http://{}:{}".format(
+    #     os.environ.get('WEBHOOK_HOST', ''),
+    #     os.environ.get('WEBHOOK_PORT', '')
+    # )
+    # WEBHOOK_URL_PATH = "/{}/".format(API_TOKEN)
+    webhook_url = f"{config['WEBHOOK_HOST']}:{config['WEBHOOK_PORT']}/{config['TOKEN']}/"
+    logger.info(f'Setting webhook url: {webhook_url}')
 
-    bot.answer_inline_query(inline_query.id, results, cache_time=0, is_personal=True)
+    # Remove webhook, it fails sometimes the set if there is a previous webhook
+    bot_object.remove_webhook()
 
-    end_time = time.time()
-    logger.info(f'handle_inline_query: Time taken: {end_time - start_time}')
-    return Response("ok", status_code=200)
+    # Set webhook
+    # wh_res = bot_object.set_webhook(
+    #     url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH, certificate=open(WEBHOOK_SSL_CERT, 'r'))
+    # print(bot_token_env, 'webhook set', wh_res)
+    wh_res = bot_object.set_webhook(url=webhook_url, max_connections=100)
+    # print('webhook set', wh_res)
+    logger.info(f'webhook set: {wh_res}')
+    # print(WEBHOOK_URL_BASE + WEBHOOK_URL_PATH)
 
-# Initialize bot
-async def init_bot(bot_config):
-    global bot
-    bot = telebot.TeleBot(bot_config['TOKEN'])
+    return bot_object
 
-    content_types=[
-        'text',
-        'photo',
-        'document',
-        'audio',
-        'video',
-        'sticker',
-        'contact',
-        'location',
-        'venue',
-        'voice',
-        'video_note',
-        'new_chat_members',
-        'left_chat_member',
-        'new_chat_title',
-        'new_chat_photo',
-        'delete_chat_photo',
-        'group_chat_created',
-        'supergroup_chat_created',
-        'channel_chat_created',
-        'migrate_to_chat_id',
-        'migrate_from_chat_id',
-        'pinned_message',
-        'invoice',
-        'successful_payment',
-        'connected_website',
-        'passport_data',
-        'proximity_alert_triggered',
-        'dice',
-        'poll',
-        'poll_answer',
-        'my_chat_member',
-        'chat_member'
-    ]
-    
-    @bot.message_handler(content_types=content_types)
-    def message_handler(message):
-        handle_text_message(message, bot_config)
 
-    @bot.callback_query_handler(func=lambda call: True)
-    def callback_query_handler(call):
-        pass
+# Process webhook calls
+async def handle(request):
+    # for bot in bots:
+    if request.match_info.get('token') == bot.token:
+        request_body_dict = await request.json()
+        update = telebot.types.Update.de_json(request_body_dict)
+        bot.process_new_updates([update])
+        return web.Response()
 
-    @bot.inline_handler(func=lambda query: True)
-    def inline_query_handler(query):
-        handle_inline_query(query, bot_config)
+    return web.Response(status=403)
 
+
+with open('config.json') as config_file:
+    config = json.load(config_file)
+
+# === calcubot ++
+bot = default_bot_init(config)
+# bots.append(calcubot)
+
+# Global dictionary for blocked users
+calcubot_blocked_users = {}
+
+# def calcubot_sequrity(request, user_id):
+#     # Check is request sequre:
+#     for word in calcubot_unsecure_words:
+#         if word in request:
+#             add_to_blocked_csv(user_id)
+#             return False
+#     return True
+
+
+# def collect_logs():
+#     try:
+#         # read all files in logs/
+#         path = 'calcubot_logs/'
+#         files = os.listdir(path)
+
+#         # create a list of dataframes
+#         dfs = []
+#         for file in files:
+#             with open(path + '/' + file, 'r') as f:
+#                 # read file to a list of strings
+#                 lines = f.readlines()
+#                 user = file[:-4]
+#                 text = ''
+#                 # create a list of lists
+#                 for line in lines:
+#                     # check, is line starts from re like: 2022-10-27 13:33:43.906742;
+#                     if re.match(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}.\d{6};', line):
+#                         if len(text) > 0:
+#                             record = [[user, date, text]]
+#                             df = pd.DataFrame(
+#                                 record, columns=['user', 'date', 'request'])
+#                             dfs.append(df)
+#                         first_semicolon = line.find(';')
+#                         left = line[:first_semicolon]
+#                         date = dt.strptime(left, '%Y-%m-%d %H:%M:%S.%f')
+#                         # print(date)
+#                         text = line[first_semicolon + 1:]
+#                     else:
+#                         text += line
+#                 if len(text) > 0:
+#                     record = [[user, date, text]]
+#                     df = pd.DataFrame(
+#                         record, columns=['user', 'date', 'request'])
+#                     dfs.append(df)
+
+#         # concat all dfs to a single one
+#         df = pd.concat(dfs)
+#         df.to_csv('requests.csv')
+#         return 'requests.csv'
+#     except Exception as e:
+#         logger.error(e)
+#         return 'error'
+
+@bot.message_handler(commands=['help', 'start'])
+def send_help(message):
+    # if granted_user(message.from_user.id):
+        # link = 'https://service.icecorp.ru/help.mp4'
+        # calcubot.send_video(message.chat.id, link,
+        #                     reply_to_message_id=str(message))
+    bot.send_message(message.chat.id, '2+2')
+
+
+@bot.message_handler(func=lambda message: True, content_types=['text'])
+def calcubot_send_user(message):
+    # if granted_user(message.from_user.id):
+    #     url = 'http://localhost:'+os.environ.get('CALCUBOT_PORT')+'/message'
+    #     reaction = True
+    #     # check is it group ?
+    #     if message.chat.type == 'group' or message.chat.type == 'supergroup':
+    #         # check, does message contains '/cl ' ?
+    #         if not message.text.startswith('/cl '):
+    #             reaction = False
+
+    #     if message.from_user.id == 106129214 and message.text.startswith('/logs'):
+    #         file = collect_logs()
+    #         if file == 'error':
+    #             calcubot.reply_to(message, 'error')
+    #         else:
+    #             calcubot.send_document(message.chat.id, open(file, 'rb'))
+    #             reaction = False
+
+    #     if reaction:
+    #         reaction = calcubot_sequrity(message.text, message.from_user.id)
+    #         if not reaction:
+    #             calcubot.reply_to(message, 'You are blocked for a day')
+
+    #     if reaction:
+    #         try:
+    #             # append datetime and expression to calcubot_logs/[user_id].csv
+    #             # splitter is ;
+    #             with open('calcubot_logs/'+str(message.from_user.id)+'.csv', 'a') as f:
+    #                 f.write(str(dt.now())+';'+str(message.text)+'\n')
+    #         except Exception as e:
+    #             logger.error(e)
+                
+    #         data = {
+    #             "message": message.text,
+    #             "user_id": message.from_user.id,
+    #             "inline": 0
+    #         }
+    #         request_str = json.dumps(data)
+    #         answer = json.loads(requests.post(url, json=request_str).text)
+    #         calcubot.reply_to(message, answer)
+    # else:
+    bot.reply_to(message, 'Service unavailable')
+
+
+@bot.inline_handler(func=lambda chosen_inline_result: True)
+def calcubot_query_text(inline_query):
+    # if granted_user(inline_query.from_user.id) and calcubot_sequrity(inline_query.query, inline_query.from_user.id):
+
+    message_text_prepared = inline_query.query.strip()
+    if message_text_prepared != '':
+        # url = 'http://localhost:' + \
+        #     os.environ.get('CALCUBOT_PORT')+'/message'
+        # data = {
+        #     "message": inline_query.query,
+        #     "inline": 1
+        # }
+        # request_str = json.dumps(data)
+        # answer = json.loads(requests.post(url, json=request_str).text)
+
+        answer = ['a', 'b', 'c']
+
+        # answer 0
+        r0 = telebot.types.InlineQueryResultArticle(
+            '0',
+            answer[0],
+            telebot.types.InputTextMessageContent(answer[0]),
+        )
+
+        # answer 1
+        r1 = telebot.types.InlineQueryResultArticle(
+            '1',
+            answer[1],
+            telebot.types.InputTextMessageContent(answer[1]),
+        )
+
+        # answer 2
+        r2 = telebot.types.InlineQueryResultArticle(
+            '2',
+            answer[2],
+            telebot.types.InputTextMessageContent(answer[2]),
+        )
+
+        answer = [r0, r1, r2]
+
+        bot.answer_inline_query(
+            inline_query.id,
+            answer,
+            cache_time=0,
+            is_personal=True
+        )  # updated
+    else:
+        answer = ['Empty expression..']
+        responce = [
+            telebot.types.InlineQueryResultArticle(
+                'result',
+                answer[0],
+                telebot.types.InputTextMessageContent(answer[0])
+            )
+        ]
+        bot.answer_inline_query(inline_query.id, responce)
+    # else:
+    #     answer = ['Service unavailable']
+    #     responce = [
+    #         telebot.types.InlineQueryResultArticle(
+    #             'result',
+    #             answer[0],
+    #             telebot.types.InputTextMessageContent(answer[0])
+    #         )
+    #     ]
+    #     calcubot.answer_inline_query(inline_query.id, responce)
+
+# === calcubot --
+
+def main():
+    logging.info('Init')
+    app = web.Application()
+    app.router.add_post('/{token}/', handle)
+    app.router.add_route('GET', '/test', call_test)
+    # Build ssl context
+    # context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    # context.load_cert_chain(WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV)
     with open('config.json') as config_file:
         config = json.load(config_file)
-
-    logger.info(f'Garden Queue: {garden_queue}')
-
-    server_api_uri = config['SERVER_API_URI']
-    server_file_url = config['SERVER_FILE_URL']
-    if server_api_uri != '':
-        telebot.apihelper.API_URL = server_api_uri
-        logger.info(f'Setting API_URL: {server_api_uri} for bot {bot_config["TOKEN"]}')
-    if server_file_url != '':
-        telebot.apihelper.FILE_URL = server_file_url
-        logger.info(f'Setting FILE_URL: {server_file_url} for bot {bot_config["TOKEN"]}')
-    
-    webhook_url = f"{config['WEBHOOK_HOST']}:{config['WEBHOOK_PORT']}/{bot_config['TOKEN']}/"
-    logger.info(f'Setting webhook url: {webhook_url}')
-    if garden_queue == 0:
-        bot.remove_webhook()
-        if server_api_uri != '':
-            bot.set_webhook(url=webhook_url, max_connections=100)
-        else:
-            with open('/cert/webhook_cert.pem', 'rb') as cert_file:
-                certificate = types.InputFile(cert_file)
-            bot.set_webhook(url=webhook_url, max_connections=100, certificate=certificate)
-    else:
-        pid = int(os.getpid())
-        time_to_sleep = 1+pid/10
-        logger.info(f'### Sleeping for {time_to_sleep} seconds')
-        time.sleep(time_to_sleep)
-
-@app.post("/{token}/")
-async def handle_request(token: str, request: Request):
-    if token == bot.token: 
-        if bot is None or bot == "":
-            logger.error(f'[x] handle_request: Bot is inactive')
-            return Response("ok", status_code=200)
-        request_body_dict = await request.json()
-        try:
-            update = telebot.types.Update.de_json(request_body_dict)
-            bot.process_new_updates([update])
-            return Response("ok", status_code=200)
-        except Exception as e:
-            logger.error(f'[x] handle_request: Error processing request: {str(e)}')
-            return Response("ok", status_code=200)
-    else:
-        logger.error(f'[x] handle_request: Invalid token: {token}')
-        return Response("ok", status_code=200)
+    logging.info('Starting')
+    # Start aiohttp server
+    web.run_app(
+        app,
+        host=WEBHOOK_LISTEN,
+        port=config['WEBHOOK_PORT'],
+        # ssl_context=context
+    )
 
 
-def fill_id_garden():
-    garden_folder = './id_garden'
-    pid = os.getpid()
-    logger.info(f'garden PID: {pid}')
-    with open(f'{garden_folder}/{pid}', 'w') as f:
-        f.write('')
-    instances = os.getenv('INSTANCES', '1')
-    logger.info(f'garden waiting for reaching {instances} instances')
-    while len(os.listdir(garden_folder)) < int(instances):
-        time.sleep(1)
-    queue = sorted(os.listdir(garden_folder)).index(str(pid))
-    logger.info(f'garden Queue: {queue}')
-    return queue
-
-async def main():
-    global garden_queue
-    garden_queue = fill_id_garden()
-
-    with open('bot_config.json') as bot_file:
-        bot_config = json.load(bot_file)
-
-    if int(bot_config['active']):
-        await init_bot(bot_config)
-        logger.info(f'Bot initialized with webhook')
-    else:
-        logger.info(f'Bot is inactive')
-
-@app.on_event("startup")
-async def startup_event():
-    await main()
+if __name__ == "__main__":
+    main()
