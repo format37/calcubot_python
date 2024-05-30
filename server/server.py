@@ -25,7 +25,7 @@ logger.setLevel(logging.INFO)
 
 WEBHOOK_HOST = os.environ.get('WEBHOOK_HOST', '')
 # 443, 80, 88 or 8443 (port need to be 'open')
-WEBHOOK_PORT = os.environ.get('WEBHOOK_PORT', '')
+# WEBHOOK_PORT = os.environ.get('WEBHOOK_PORT', '')
 WEBHOOK_LISTEN = '0.0.0.0'  # In some VPS you may need to put here the IP addr
 # WEBHOOK_SSL_CERT = 'webhook_cert.pem'
 # WEBHOOK_SSL_PRIV = 'webhook_pkey.pem'
@@ -54,7 +54,7 @@ def default_bot_init(config):
     #     os.environ.get('WEBHOOK_PORT', '')
     # )
     # WEBHOOK_URL_PATH = "/{}/".format(API_TOKEN)
-    webhook_url = f"{config['WEBHOOK_HOST']}:{config['WEBHOOK_PORT']}/{config['TOKEN']}/"
+    webhook_url = f"{config['WEBHOOK_URL']}/{config['TOKEN']}/"
     logger.info(f'Setting webhook url: {webhook_url}')
 
     # Remove webhook, it fails sometimes the set if there is a previous webhook
