@@ -294,7 +294,7 @@ def main():
     web.run_app(
         app,
         host=config['WEBHOOK_HOST'],
-        port=config['WEBHOOK_PORT'],
+        port=int(config['WEBHOOK_PORT']),
         # ssl_context=context
     )
 
