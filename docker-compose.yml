@@ -18,6 +18,8 @@ services:
     environment:
       - BOT_TOKEN=YOUR_BOT_TOKEN
     volumes:
+      - ./config.json:/server/config.json
+      - ./bot_config.json:/server/bot_config.json
       - ./id_garden:/server/id_garden
 
   # calcubot_test:
