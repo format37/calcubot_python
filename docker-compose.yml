@@ -15,7 +15,8 @@ services:
         max-file: "3"
     ports:
       - "8000:8000"
-      - "8081:8081"
+    expose:
+      - "8081"
     # network_mode: "host"
     volumes:
       # - /etc/letsencrypt/live/YOUR-DOMAIN.COM/fullchain.pem:/cert/webhook_cert.pem
