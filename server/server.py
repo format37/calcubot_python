@@ -1,11 +1,12 @@
-import os
-import requests
+# import os
+# import requests
 from aiohttp import web
 import telebot
 import json
 import logging
 import subprocess
-from datetime import datetime as dt
+# from datetime import datetime as dt
+import asyncio
 
 
 def default_bot_init(config):
@@ -106,7 +107,8 @@ async def secure_eval(expression, mode):
         return 'Request is not supported'
 
 
-@bot.message_handler(func=lambda message: True, content_types=['text'])
+# @bot.message_handler(func=lambda message: True, content_types=['text'])
+@bot.message_handler(func=lambda message: asyncio.run(True), content_types=['text'])
 async def calcubot_send_user(message):
     # Empty message
     if 'text' not in message:
