@@ -179,7 +179,7 @@ async def calcubot_send_user(message):
         else:
             logger.info(f'[start_from_cl] User: {message["from"]["id"]} Request: {expression}')
 
-    
+    logger.info(f'User: {message["from"]["id"]} Request: {expression}')
     answer_max_lenght = 4095
     user_id = str(message['from']['id'])
     res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]    
