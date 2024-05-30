@@ -13,11 +13,11 @@ services:
       options:
         max-size: "1m"
         max-file: "3"
-    ports:
-      - "8000:8000"
-    expose:
-      - "8081"
-    # network_mode: "host"
+    # ports:
+    #   - "8000:8000"
+    # expose:
+    #   - "8081"
+    network_mode: "host"
     volumes:
       # - /etc/letsencrypt/live/YOUR-DOMAIN.COM/fullchain.pem:/cert/webhook_cert.pem
       # - /etc/letsencrypt/live/YOUR-DOMAIN.COM/privkey.pem:/cert/webhook_pkey.pem
