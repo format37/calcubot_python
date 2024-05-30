@@ -7,6 +7,8 @@ import logging
 import subprocess
 # from datetime import datetime as dt
 import asyncio
+import tracemalloc
+tracemalloc.start()
 
 
 def default_bot_init(config):
