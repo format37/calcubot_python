@@ -22,10 +22,12 @@ blocked_users = [x.strip() for x in blocked_users]
 app = FastAPI()
 
 # Initialize logging
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
+# logger.setLevel(logging.INFO)
+# logger.info('Logging started')
+logging.config.fileConfig('logging.ini')
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger.info('Logging started')
 
 with open('config.json') as config_file:
     # temp_config = json.load(config_file)
@@ -38,34 +40,34 @@ logger.info(f'Bot initialized: {bot}')
 
 # {'message_id': 11015390, 'from': {'id': 106129214, 'is_bot': False, 'first_name': 'Alex', 'username': 'format37', 'language_code': 'en', 'is_premium': True}, 'chat': {'id': 106129214, 'first_name': 'Alex', 'username': 'format37', 'type': 'private'}, 'date': 1716907673, 'text': '1+6'}
 
-class From:
-    def __init__(self, from_user):
-        self.id = from_user['id']
-        self.is_bot = from_user['is_bot']
-        self.first_name = from_user['first_name']
-        self.username = from_user['username']
-        self.language_code = from_user['language_code']
-        self.is_premium = from_user['is_premium']
+# class From:
+#     def __init__(self, from_user):
+#         self.id = from_user['id']
+#         self.is_bot = from_user['is_bot']
+#         self.first_name = from_user['first_name']
+#         self.username = from_user['username']
+#         self.language_code = from_user['language_code']
+#         self.is_premium = from_user['is_premium']
 
-class Chat:
-    def __init__(self, chat):
-        self.id = chat['id']
-        self.first_name = chat['first_name']
-        self.username = chat['username']
-        self.type = chat['type']
+# class Chat:
+#     def __init__(self, chat):
+#         self.id = chat['id']
+#         self.first_name = chat['first_name']
+#         self.username = chat['username']
+#         self.type = chat['type']
 
-class Message:
-    def __init__(self, message):
-        logger.info(f'### [Message]: {str(message)}')
+# class Message:
+#     def __init__(self, message):
+#         logger.info(f'### [Message]: {str(message)}')
         
-        self.message_id = message['message_id']        
+#         self.message_id = message['message_id']        
         
-        self.from_user = From(message['from'])
-        self.chat = Chat(message['chat'])
+#         self.from_user = From(message['from'])
+#         self.chat = Chat(message['chat'])
 
-        self.text = message['text']
-        self.date = message['date']
-        self.type = 'message'
+#         self.text = message['text']
+#         self.date = message['date']
+#         self.type = 'message'
 
 
 async def is_complete_expression(expression):

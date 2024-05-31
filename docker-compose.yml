@@ -18,6 +18,7 @@ services:
       - "8704:8000"
     volumes:
       - ./config.json:/server/config.json
+      - ./logging.ini:/server/logging.ini
 
   calcubot_test:
     container_name: calcubot_test
@@ -36,19 +37,4 @@ services:
       - "8705:8000"
     volumes:
       - ./config_test.json:/server/config.json
-
-  # calcubot_test:
-  #   container_name: calcubot_test
-  #   restart: always
-  #   read_only: true
-  #   tmpfs:
-  #     - /tmp
-  #   build: server
-  #   # Limit cpu
-  #   cpus: 1
-  #   logging:
-  #     options:
-  #       max-size: "10m"
-  #       max-file: "3"
-  #   ports:
-  #     - "8705:8000"
+      - ./logging.ini:/server/logging.ini
