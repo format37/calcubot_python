@@ -15,5 +15,5 @@ COPY blocked_users.txt /server
 COPY unsecure_words.txt /server
 # COPY bot_config.json /server
 # CMD ["gunicorn", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--timeout", "15", "server:app"]
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8705", "--log-level", "warning"]
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "warning"]
 # CMD ["python", "server.py"]
