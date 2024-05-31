@@ -28,9 +28,12 @@ logger.setLevel(logging.INFO)
 logger.info('Logging started')
 
 with open('config.json') as config_file:
-    temp_config = json.load(config_file)
-bot_token = temp_config['TOKEN']
-bot = telebot.TeleBot(bot_token)
+    # temp_config = json.load(config_file)
+    bot = telebot.TeleBot(json.load(config_file)['TOKEN'])
+# drop config_file
+config_file.close()
+# bot_token = temp_config['TOKEN']
+# bot = telebot.TeleBot(bot_token)
 logger.info(f'Bot initialized: {bot}')
 
 # {'message_id': 11015390, 'from': {'id': 106129214, 'is_bot': False, 'first_name': 'Alex', 'username': 'format37', 'language_code': 'en', 'is_premium': True}, 'chat': {'id': 106129214, 'first_name': 'Alex', 'username': 'format37', 'type': 'private'}, 'date': 1716907673, 'text': '1+6'}
