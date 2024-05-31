@@ -98,6 +98,10 @@ async def call_message(request: Request, authorization: str = Header(None)):
     # Not private chat
     if not message['chat']['type'] == 'private':
         logger.info(f"message: {message}")
+        # if via_bot is in message, return
+        if 'via_bot' in message:
+            logger.info(f"answer canceled due to via_bot: {message['via_bot']}")
+            return Response(content='ok', status_code=200)
     #     # Exit from group
     #     logger.info(f"### ### ### Leaving group: {message['chat']['id']}: {bot.leave_chat(message['chat']['id'])}")
     #     return Response(content='ok', status_code=200)
