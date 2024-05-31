@@ -16,3 +16,4 @@ getattr
 with
 token
 globals
+bot

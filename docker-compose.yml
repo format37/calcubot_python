@@ -36,7 +36,7 @@ services:
     ports:
       - "8705:8000"
     volumes:
-      - ./config.json:/server/config.json
+      - ./config_test.json:/server/config.json
 
   # calcubot_test:
   #   container_name: calcubot_test
