@@ -100,7 +100,7 @@ async def call_message(request: Request, authorization: str = Header(None)):
         # logger.info(f"message: {message}")
         # if via_bot is in message, return
         if 'via_bot' in message or 'reply_to_message' in message:
-            logger.info(f"answer canceled due to via_bot: {message['via_bot']}")
+            # logger.info(f"answer canceled due to via_bot or reply_to_message in message")
             return Response(content='ok', status_code=200)
     #     # Exit from group
     #     logger.info(f"### ### ### Leaving group: {message['chat']['id']}: {bot.leave_chat(message['chat']['id'])}")
