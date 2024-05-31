@@ -123,8 +123,8 @@ async def handle_message_wrapper(message):
 async def calcubot_send_user(message):
     logger.info(f'calcubot_send_user: {message}')
     # Convert message to dict
-    message = message.to_dict()
-    logger.info(f'message: {message}')
+    # message = message.to_dict()
+    logger.info(f'message: {message.chat}')
     # Empty message+
     if 'text' not in message:
         logger.info(f'Empty message')
