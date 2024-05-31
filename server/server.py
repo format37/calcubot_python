@@ -23,32 +23,32 @@ blocked_users = [x.strip() for x in blocked_users]
 app = FastAPI()
 
 # Initialize logging
-# logging.basicConfig(level=logging.INFO)
-# logger = logging.getLogger(__name__)
-# logger.setLevel(logging.INFO)
-# logger.info('Logging started')
-logging.config.fileConfig('logging.ini')
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.info('Logging started')
+# logging.config.fileConfig('logging.ini')
+# logger = logging.getLogger(__name__)
 
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    logger.warning(f"Invalid HTTP request received:")
-    logger.warning(f"Method: {request.method}")
-    logger.warning(f"URL: {request.url}")
-    logger.warning(f"Headers: {request.headers}")
-    logger.warning(f"Body: {await request.body()}")
-    return JSONResponse(content={"status": "error"}, status_code=exc.status_code)
+# @app.exception_handler(HTTPException)
+# async def http_exception_handler(request: Request, exc: HTTPException):
+#     logger.warning(f"Invalid HTTP request received:")
+#     logger.warning(f"Method: {request.method}")
+#     logger.warning(f"URL: {request.url}")
+#     logger.warning(f"Headers: {request.headers}")
+#     logger.warning(f"Body: {await request.body()}")
+#     return JSONResponse(content={"status": "error"}, status_code=exc.status_code)
 
 
-class RequestLoggingMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        logger.info(f"Incoming request: {request.method} {request.url}")
-        logger.info(f"Headers: {request.headers}")
-        logger.info(f"Body: {await request.body()}")
-        response = await call_next(request)
-        return response
+# class RequestLoggingMiddleware(BaseHTTPMiddleware):
+#     async def dispatch(self, request: Request, call_next):
+#         logger.info(f"Incoming request: {request.method} {request.url}")
+#         logger.info(f"Headers: {request.headers}")
+#         logger.info(f"Body: {await request.body()}")
+#         response = await call_next(request)
+#         return response
 
-app.add_middleware(RequestLoggingMiddleware)
+# app.add_middleware(RequestLoggingMiddleware)
 
 with open('config.json') as config_file:
     # temp_config = json.load(config_file)
@@ -213,7 +213,7 @@ async def call_message(request: Request, authorization: str = Header(None)):
     res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]    
     response = f'{res} = {expression}'
     # prefix = 'cl ' if start_from_cl else ''
-    reply_to_message_id = message['message_id']
+    # reply_to_message_id = message['message_id']
     # logging.info(f'{prefix}User: {user_id} Request: {expression} Response: {response}, message_id: {message_id}')
     
     # message_instance = Message(message)
