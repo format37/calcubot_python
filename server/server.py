@@ -5,7 +5,8 @@ import subprocess
 import ast
 import telebot
 from telebot.types import ReplyParameters
-import os
+# import os
+import json
 
 # Read unsecure words from file
 with open('unsecure_words.txt') as f:
@@ -25,7 +26,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-bot_token = os.environ['BOT_TOKEN']
+with open('config.json') as config_file:
+    temp_config = json.load(config_file)
+bot_token = temp_config['TOKEN']
 bot = telebot.TeleBot(bot_token)
 
 # {'message_id': 11015390, 'from': {'id': 106129214, 'is_bot': False, 'first_name': 'Alex', 'username': 'format37', 'language_code': 'en', 'is_premium': True}, 'chat': {'id': 106129214, 'first_name': 'Alex', 'username': 'format37', 'type': 'private'}, 'date': 1716907673, 'text': '1+6'}
