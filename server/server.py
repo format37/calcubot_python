@@ -103,6 +103,10 @@ async def call_message(request: Request, authorization: str = Header(None)):
     # Blocked user
     if await is_blocked_user(str(message['from']['id'])):
         return Response(content='ok', status_code=200)
+    
+    # if /cl is in expression, replace /cl with ''
+    if '/cl' in expression:
+        expression = expression.replace('/cl', '')
    
     answer_max_lenght = 4095
     res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]    
