@@ -124,7 +124,7 @@ async def calcubot_send_user(message):
     logger.info(f'calcubot_send_user: {message}')
     # Convert message to dict
     # message = message.to_dict()
-    logger.info(f'message: {message.chat}')
+    logger.info(f'message: {message.chat.id}')
     # Empty message+
     if 'text' not in message:
         logger.info(f'Empty message')
@@ -133,7 +133,8 @@ async def calcubot_send_user(message):
         #     "type": "empty",
         #     "body": ''
         # })    
-    expression = message['text']
+    # expression = message['text']
+    expression = message.text
     # Start or help
     if expression.startswith('/start') or expression.startswith('/help'):
         logger.info(f'Start or help')
@@ -151,7 +152,8 @@ async def calcubot_send_user(message):
 
     start_from_cl = expression.startswith('/cl')
     # Not private chat
-    if not start_from_cl and not message['chat']['type'] == 'private':
+    # if not start_from_cl and not message['chat']['type'] == 'private':
+    if not start_from_cl and not message.chat.type == 'private':
         logger.info(f'Not private chat')
         pass
         # return web.Response(content='ok', status_code=200)
@@ -160,8 +162,10 @@ async def calcubot_send_user(message):
         #     "body": ''
         # })
     # Blocked user
-    if await is_blocked_user(str(message['from']['id'])):
-        logger.info(f'Blocked user: {message["from"]["id"]}')
+    # if await is_blocked_user(str(message['from']['id'])):
+    if await is_blocked_user(str(message.from_user.id)):
+        # logger.info(f'Blocked user: {message["from"]["id"]}')
+        logger.info(f'Blocked user: {message.from_user.id}')
         # Return ok, http 200
         return web.Response(content='ok', status_code=200)
 
@@ -169,26 +173,32 @@ async def calcubot_send_user(message):
         logger.info(f'start_from_cl expression: {expression}')
         expression = expression[4:]
         if expression.strip() == '':
-            if message['chat']['type'] == 'private':
+            # if message['chat']['type'] == 'private':
+            if message.chat.type == 'private':
                 body = 'This is a Python interpreter. Just type your expression and get the result. For example: 2+2'
             else:
                 body = 'This is a Python interpreter. Just type your expression and get the result. For example: /cl 2+2'
-            logger.info(f'[start_from_cl] User: {message["from"]["id"]} Request: {expression}')
+            # logger.info(f'[start_from_cl] User: {message["from"]["id"]} Request: {expression}')
+            logger.info(f'[start_from_cl] User: {message.from_user.id} Request: {expression}')
             pass
             # return JSONResponse(content={
             #     "type": "text",
             #     "body": body
             # })
         else:
-            logger.info(f'[start_from_cl] User: {message["from"]["id"]} Request: {expression}')
+            # logger.info(f'[start_from_cl] User: {message["from"]["id"]} Request: {expression}')
+            logger.info(f'[start_from_cl] User: {message.from_user.id} Request: {expression}')
 
-    logger.info(f'User: {message["from"]["id"]} Request: {expression}')
+    # logger.info(f'User: {message["from"]["id"]} Request: {expression}')
+    logger.info(f'User: {message.from_user.id} Request: {expression}')
     answer_max_lenght = 4095
-    user_id = str(message['from']['id'])
+    # user_id = str(message['from']['id'])
+    user_id = str(message.from_user.id)
     res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]    
     response = f'{res} = {expression}'
     prefix = 'cl ' if start_from_cl else ''
-    reply_to_message_id = message['message_id']
+    # reply_to_message_id = message['message_id']
+    reply_to_message_id = message.message_id
     # logging.info(f'{prefix}User: {user_id} Request: {expression} Response: {response}, message_id: {message_id}')
     
     # message_instance = Message(message)
@@ -199,10 +209,13 @@ async def calcubot_send_user(message):
     #     text="This is a reply to your message.",
     #     reply_parameters=reply_parameters
     # )
-    logging.info(f'Sending message to chat id: {message["chat"]["id"]}, response: {response}')
-    logger.info(f'chat id type: {type(message["chat"]["id"])}')
+    # logging.info(f'Sending message to chat id: {message["chat"]["id"]}, response: {response}')
+    logger.info(f'Sending message to chat id: {message.chat.id}, response: {response}')
+    # logger.info(f'chat id type: {type(message["chat"]["id"])}')
+    logger.info(f'chat id type: {type(message.chat.id)}')
     logger.info(f'response type: {type(response)}')
-    bot.send_message(message['chat']['id'], response)
+    # bot.send_message(message['chat']['id'], response)
+    bot.send_message(message.chat.id, response)
 
     # return JSONResponse(content={
     #     "type": "text",
