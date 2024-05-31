@@ -131,7 +131,7 @@ async def secure_eval(expression, mode):
 async def call_message(request: Request, authorization: str = Header(None)):
     # logger.info(f'call_message. bot: {str(bot)}')
     message = await request.json()
-    logger.info(f'[call_message]: {str(message)}')
+    # logger.info(f'[call_message]: {str(message)}')
 
 #     response = """Hello,
 
@@ -225,8 +225,8 @@ async def call_message(request: Request, authorization: str = Header(None)):
     #     reply_parameters=reply_parameters
     # )
     logging.info(f'Sending message to chat id: {message["chat"]["id"]}, response: {response}')
-    logger.info(f'chat id type: {type(message["chat"]["id"])}')
-    logger.info(f'response type: {type(response)}')
+    # logger.info(f'chat id type: {type(message["chat"]["id"])}')
+    # logger.info(f'response type: {type(response)}')
     bot.send_message(message['chat']['id'], response)
 
     # return JSONResponse(content={
