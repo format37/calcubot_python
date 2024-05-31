@@ -151,7 +151,10 @@ async def call_message(request: Request, authorization: str = Header(None)):
     start_from_cl = expression.startswith('/cl')
     # Not private chat
     if not start_from_cl and not message['chat']['type'] == 'private':
-        pass
+        # Exit from group
+        logger.info(f'### ### ### Leaving group: {message["chat"]["id"]}')
+        logger.info(f'leaving: {bot.leave_chat(message['chat']['id'])}')
+        return Response(content='ok', status_code=200)
         # return JSONResponse(content={
         #     "type": "empty",
         #     "body": ''
