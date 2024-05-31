@@ -68,7 +68,6 @@ class Message:
         self.type = 'message'
 
 
-
 async def is_complete_expression(expression):
     try:
         # If empty string then return False
@@ -129,15 +128,16 @@ async def call_message(request: Request, authorization: str = Header(None)):
 
     # Empty message
     if 'text' not in message:
-        pass
+        # pass
         # return JSONResponse(content={
         #     "type": "empty",
         #     "body": ''
         # })    
+        return Response(content='ok', status_code=200)
     expression = message['text']
     # Start or help
     if expression.startswith('/start') or expression.startswith('/help'):
-        pass
+        # pass
         """link = 'https://rtlm.info/help.mp4'
         bot.send_video(message.chat.id, link,
                             reply_to_message_id=str(message))"""
@@ -145,6 +145,9 @@ async def call_message(request: Request, authorization: str = Header(None)):
         #     "type": "text",
         #     "body": 'This is a Python interpreter. Just type your expression and get the result. For example: 2+2'
         # })
+        # Send help message
+        response = "This is a console calculator using Python syntax. Just type your expression and get the result. For example: 2+2"
+        return Response(content='ok', status_code=200)
     start_from_cl = expression.startswith('/cl')
     # Not private chat
     if not start_from_cl and not message['chat']['type'] == 'private':
