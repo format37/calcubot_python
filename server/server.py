@@ -96,7 +96,8 @@ async def call_message(request: Request, authorization: str = Header(None)):
         bot.send_message(message['chat']['id'], response)
         return Response(content='ok', status_code=200)
     # Not private chat
-    # if not message['chat']['type'] == 'private':
+    if not message['chat']['type'] == 'private':
+        logger.info(f"message: {message}")
     #     # Exit from group
     #     logger.info(f"### ### ### Leaving group: {message['chat']['id']}: {bot.leave_chat(message['chat']['id'])}")
     #     return Response(content='ok', status_code=200)
