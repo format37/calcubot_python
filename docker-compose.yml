@@ -19,7 +19,6 @@ services:
     volumes:
       - ./config.json:/server/config.json
 
-services:
   calcubot_test:
     container_name: calcubot_test
     restart: always
