@@ -104,15 +104,20 @@ async def call_message(request: Request, authorization: str = Header(None)):
     if await is_blocked_user(str(message['from']['id'])):
         return Response(content='ok', status_code=200)
     
+    need_to_reply = False
     # if /cl is in expression, replace /cl with ''
     if '/cl' in expression:
         expression = expression.replace('/cl', '')
+        need_to_reply = True
    
     answer_max_lenght = 4095
     res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]    
     response = f'{res} = {expression}'
     logging.info(f'Sending message to chat id: {message["chat"]["id"]}, response: {response}')
-    bot.send_message(message['chat']['id'], response)    
+    if need_to_reply:
+        bot.send_message(message['chat']['id'], response, reply_to_message_id=message['message_id'])
+    else:
+        bot.send_message(message['chat']['id'], response)
     
     return Response(content='ok', status_code=200)
 
