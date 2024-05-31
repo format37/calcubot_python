@@ -96,10 +96,10 @@ async def call_message(request: Request, authorization: str = Header(None)):
         bot.send_message(message['chat']['id'], response)
         return Response(content='ok', status_code=200)
     # Not private chat
-    if not message['chat']['type'] == 'private':
-        # Exit from group
-        logger.info(f"### ### ### Leaving group: {message['chat']['id']}: {bot.leave_chat(message['chat']['id'])}")
-        return Response(content='ok', status_code=200)
+    # if not message['chat']['type'] == 'private':
+    #     # Exit from group
+    #     logger.info(f"### ### ### Leaving group: {message['chat']['id']}: {bot.leave_chat(message['chat']['id'])}")
+    #     return Response(content='ok', status_code=200)
     # Blocked user
     if await is_blocked_user(str(message['from']['id'])):
         return Response(content='ok', status_code=200)
@@ -138,7 +138,7 @@ async def call_inline(request: Request, authorization: str = Header(None)):
 
     try:
         inline_elements = []
-        for i in range(len(answer)):    
+        for i in range(len(answer)):
             element = telebot.types.InlineQueryResultArticle(
                 str(i),
                 answer[i],
