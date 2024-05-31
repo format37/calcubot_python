@@ -122,6 +122,8 @@ async def handle_message_wrapper(message):
 # @bot.message_handler(func=lambda message: asyncio.run(True), content_types=['text'])
 async def calcubot_send_user(message):
     logger.info(f'calcubot_send_user')
+    # Convert message to dict
+    message = message.to_dict()
     # Empty message+
     if 'text' not in message:
         logger.info(f'Empty message')
