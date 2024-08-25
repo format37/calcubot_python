@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Request, Header, Response, HTTPException
-from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import FastAPI, Request, Header, Response
+# , HTTPException
+# from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse
 import logging
-import subprocess
+from subprocess import Popen, PIPE, STDOUT
 import ast
 import telebot
 import json
@@ -60,10 +61,10 @@ async def call_test():
 
 async def secure_eval(expression, mode):
     if await calcubot_security(expression):
-        ExpressionOut = subprocess.Popen(
+        ExpressionOut = Popen(
         ['python3', 'calculate_'+mode+'.py',expression],
-        stdout=subprocess.PIPE, 
-        stderr=subprocess.STDOUT)
+        stdout=PIPE, 
+        stderr=STDOUT)
         stdout,stderr = ExpressionOut.communicate()
         return( stdout.decode("utf-8").replace('\n','') )
     else:
