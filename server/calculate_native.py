@@ -15,14 +15,14 @@ import json
 import re
 # import resource
 # import ast
-from simpleeval import simple_eval
+# from simpleeval import simple_eval
 
 try:
 	res_limits = resource.getrusage(resource.RUSAGE_SELF)
 	resource.setrlimit(resource.RLIMIT_CPU, (2, 2))
 	request = argv[1]
-	# print( eval(request) )
+	print( eval(request) )
 	# print( ast.literal_eval(request) )
-	print(simple_eval(request))
+	# print(simple_eval(request))
 except Exception as e:
 	print(e)
