@@ -9,4 +9,4 @@ uvicorn==0.23.2
 # gunicorn==22.0.0
 pandas==2.2.1
 aiohttp==3.9.5
-simpleeval==0.9.13
+# simpleeval==0.9.13
