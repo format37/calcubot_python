@@ -10,6 +10,8 @@ services:
     build: server
     # Limit cpu
     # cpus: 1
+    environment:
+      - FASTAPI_ENV=production
     logging:
       options:
         max-size: "1m"
@@ -29,6 +31,8 @@ services:
     build: server
     # Limit cpu
     # cpus: 1
+    environment:
+      - FASTAPI_ENV=production
     logging:
       options:
         max-size: "1m"

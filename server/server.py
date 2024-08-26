@@ -7,6 +7,7 @@ from subprocess import Popen, PIPE, STDOUT
 import ast
 import telebot
 import json
+from re import findall
 
 # Read unsecure words from file
 with open('unsecure_words.txt') as f:
@@ -22,16 +23,17 @@ blocked_users = [x.strip() for x in blocked_users]
 app = FastAPI()
 
 # Initialize logging
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-logger.info('Logging started')
+# logger.info('Logging started')
 
 with open('config.json') as config_file:
     bot = telebot.TeleBot(json.load(config_file)['TOKEN'])
 # drop config_file
 config_file.close()
-logger.info(f'Bot initialized: {bot}')
+# logger.info(f'Bot initialized: {bot}')
 
 
 async def is_complete_expression(expression):
@@ -60,6 +62,9 @@ async def call_test():
     return JSONResponse(content={"status": "ok"})
 
 async def secure_eval(expression, mode):
+    logger.info(f'expression original: {expression}')
+    expression = sequrity(expression)
+    logger.info(f'expression secured: {expression}')
     if await calcubot_security(expression):
         ExpressionOut = Popen(
         ['python3', 'calculate_'+mode+'.py',expression],
@@ -69,6 +74,36 @@ async def secure_eval(expression, mode):
         return( stdout.decode("utf-8").replace('\n','') )
     else:
         return 'Request is not supported'
+
+def sequrity(user_input):
+    # functions = ["random"]
+
+    # Sequre symbols
+    s_s = "-+*/"
+    # Sequre symbols regex
+    s_s_r = "[" + "".join(["\\" + s for s in s_s]) + "]"
+    # Sequre number regex
+    s_n_r = r"\d+.?\d*"
+
+    twisted_number_regex = rf"[{s_n_r}{s_s_r}?]?"
+    print(twisted_number_regex)
+
+    # user_input = "4 * 6"
+    user_secure_input = "".join(
+        findall(
+            twisted_number_regex,
+            user_input.replace(" ", ""),
+        )
+    )
+    return user_secure_input
+    # try:
+    #     bot_output = eval(user_secure_input)
+    # except Exception as e:
+    #     # log(e)
+    #     bot_output = "Irrational input!"
+
+    # print(bot_output, "=", user_input)
+
     
 @app.post("/message")
 async def call_message(request: Request, authorization: str = Header(None)):
