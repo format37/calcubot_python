@@ -63,8 +63,7 @@ async def call_test():
 
 async def secure_eval(expression, mode):
     logger.info(f'expression original: {expression}')
-    expression = sequrity(expression)
-    logger.info(f'expression secured: {expression}')
+    logger.info(f'expression to evaluate: {expression}')
     if await calcubot_security(expression):
         ExpressionOut = Popen(
         ['python3', 'calculate_'+mode+'.py',expression],
