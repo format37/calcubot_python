@@ -1,7 +1,15 @@
 FROM python:3.14.0-slim-trixie
 WORKDIR /server
 COPY requirements.txt /server
-RUN pip3 install -r requirements.txt --no-cache-dir
+
+# Install build dependencies for scipy, matplotlib, and pandas
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gfortran \
+    && pip3 install -r requirements.txt --no-cache-dir \
+    && apt-get purge -y --auto-remove build-essential gfortran \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set the timezone.
 ENV TZ=America/Los_Angeles
