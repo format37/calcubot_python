@@ -79,7 +79,7 @@ def sequrity(user_input):
     # functions = ["random"]
 
     # Sequre symbols
-    s_s = "-+*/"
+    s_s = "-+*/()"
     # Sequre symbols regex
     s_s_r = "[" + "".join(["\\" + s for s in s_s]) + "]"
     # Sequre number regex
