@@ -7,7 +7,7 @@ from subprocess import Popen, PIPE, STDOUT
 import ast
 import telebot
 import json
-from re import findall
+from re import findall, search, escape
 
 # Read unsecure words from file
 with open('unsecure_words.txt') as f:
@@ -47,9 +47,11 @@ async def is_complete_expression(expression):
         return False
 
 async def calcubot_security(request):
-    # Check is request sequre:
+    # Check is request secure:
     for word in calcubot_unsecure_words:
-        if word in request:
+        # Use word boundary matching to avoid false positives
+        # e.g., "os" should block "os.system" but not "gosuslugi"
+        if search(r'\b' + escape(word) + r'\b', request):
             return False
     return True
 
