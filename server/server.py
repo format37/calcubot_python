@@ -47,11 +47,17 @@ async def is_complete_expression(expression):
         return False
 
 async def calcubot_security(request):
+    # Decode unicode escapes before checking to prevent bypass via \uXXXX sequences
+    try:
+        decoded = request.encode('utf-8').decode('unicode_escape')
+    except:
+        decoded = request  # fallback if decode fails
+
     # Check is request secure:
     for word in calcubot_unsecure_words:
         # Use word boundary matching to avoid false positives
         # e.g., "os" should block "os.system" but not "gosuslugi"
-        if search(r'\b' + escape(word) + r'\b', request):
+        if search(r'\b' + escape(word) + r'\b', decoded):
             return False
     return True
 
@@ -68,11 +74,14 @@ async def secure_eval(expression, mode):
     logger.info(f'expression to evaluate: {expression}')
     if await calcubot_security(expression):
         ExpressionOut = Popen(
-        ['python3', 'calculate_'+mode+'.py',expression],
-        stdout=PIPE, 
-        stderr=STDOUT)
-        stdout,stderr = ExpressionOut.communicate()
-        return( stdout.decode("utf-8").replace('\n','') )
+            ['python3', 'calculate_'+mode+'.py', expression],
+            stdout=PIPE,
+            stderr=STDOUT,
+            cwd='sandbox',           # Run in sandbox directory (no config.json there)
+            env={'PATH': '/usr/bin'} # Clean environment, no secrets inherited
+        )
+        stdout, stderr = ExpressionOut.communicate()
+        return stdout.decode("utf-8").replace('\n','')
     else:
         return 'Request is not supported'
 

@@ -15,12 +15,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV TZ=America/Los_Angeles
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-COPY calculate_inline.py /server
-COPY calculate_native.py /server
-COPY user_defined.py /server
+# Create sandbox directory for isolated eval execution
+RUN mkdir -p /server/sandbox
+
+# Copy main server files (config.json mounted at runtime stays here)
 COPY server.py /server
 COPY blocked_users.txt /server
 COPY unsecure_words.txt /server
+
+# Copy eval scripts to sandbox (isolated from config.json and secrets)
+COPY sandbox/calculate_inline.py /server/sandbox/
+COPY sandbox/calculate_native.py /server/sandbox/
+COPY sandbox/user_defined.py /server/sandbox/
 # COPY bot_config.json /server
 # CMD ["gunicorn", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--timeout", "15", "server:app"]
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "warning"]
