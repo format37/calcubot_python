@@ -77,8 +77,8 @@ async def secure_eval(expression, mode):
             ['python3', 'calculate_'+mode+'.py', expression],
             stdout=PIPE,
             stderr=STDOUT,
-            cwd='sandbox',           # Run in sandbox directory (no config.json there)
-            env={'PATH': '/usr/bin'} # Clean environment, no secrets inherited
+            cwd='sandbox',                              # Run in sandbox directory (no config.json there)
+            env={'PATH': '/usr/local/bin:/usr/bin'}  # Clean environment, no secrets inherited
         )
         stdout, stderr = ExpressionOut.communicate()
         return stdout.decode("utf-8").replace('\n','')
