@@ -46,14 +46,49 @@ async def is_complete_expression(expression):
     except SyntaxError:
         return False
 
+def is_dangerous_ast(expression):
+    """AST-based security check - detects dangerous patterns at syntax level"""
+    DANGEROUS_NAMES = {'__import__', 'exec', 'eval', 'compile', 'open',
+                       'getattr', 'setattr', 'delattr', 'vars', 'dir',
+                       'globals', 'locals', 'builtins', 'input'}
+    try:
+        tree = ast.parse(expression, mode='eval')
+    except SyntaxError:
+        return True  # Block invalid syntax
+
+    for node in ast.walk(tree):
+        # Block dangerous function calls
+        if isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Name) and node.func.id in DANGEROUS_NAMES:
+                return True
+            if isinstance(node.func, ast.Attribute) and node.func.attr in DANGEROUS_NAMES:
+                return True
+        # Block dunder attribute access (e.g., __class__, __bases__)
+        if isinstance(node, ast.Attribute) and node.attr.startswith('__'):
+            return True
+        # Block dunder names (e.g., __import__, __builtins__)
+        if isinstance(node, ast.Name) and node.id.startswith('__'):
+            return True
+    return False
+
+def filter_sensitive_output(response):
+    """Filter potential token leaks from output"""
+    # Telegram bot token pattern: 123456789:ABC-DEF1234ghIkl-zyx57W2v1u123ew11
+    if search(r'\d{8,10}:[A-Za-z0-9_-]{35}', response):
+        return '[FILTERED]'
+    return response
+
 async def calcubot_security(request):
-    # Decode unicode escapes before checking to prevent bypass via \uXXXX sequences
+    # 1. AST-based check (catches construction bypasses like string concat, f-strings, byte decoding)
+    if is_dangerous_ast(request):
+        return False
+
+    # 2. Regex blocklist (catches string patterns)
     try:
         decoded = request.encode('utf-8').decode('unicode_escape')
     except:
         decoded = request  # fallback if decode fails
 
-    # Check is request secure:
     for word in calcubot_unsecure_words:
         # Use word boundary matching to avoid false positives
         # e.g., "os" should block "os.system" but not "gosuslugi"
@@ -81,7 +116,9 @@ async def secure_eval(expression, mode):
             env={'PATH': '/usr/local/bin:/usr/bin'}  # Clean environment, no secrets inherited
         )
         stdout, stderr = ExpressionOut.communicate()
-        return stdout.decode("utf-8").replace('\n','')
+        result = stdout.decode("utf-8").replace('\n','')
+        # 3. Output filter - last line of defense against token leaks
+        return filter_sensitive_output(result)
     else:
         return 'Request is not supported'
 
