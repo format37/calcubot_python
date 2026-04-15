@@ -195,7 +195,7 @@ async def call_message(request: Request, authorization: str = Header(None)):
     need_to_reply = False
     # if /cl is in expression, replace /cl with ''
     if '/cl' in expression:
-        expression = expression.replace('/cl', '')
+        expression = expression.replace('/cl', '').strip()
         need_to_reply = True
    
     answer_max_lenght = 4095
