@@ -8,6 +8,33 @@ import ast
 import telebot
 import json
 from re import findall, search, escape
+import sqlite3
+import asyncio
+import os
+
+DB_PATH = '/server/data/calcubot.db'
+compact_users: set = set()
+
+def _init_db() -> set:
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute('CREATE TABLE IF NOT EXISTS compact_users (user_id TEXT PRIMARY KEY)')
+    conn.commit()
+    rows = conn.execute('SELECT user_id FROM compact_users').fetchall()
+    conn.close()
+    return {row[0] for row in rows}
+
+def _db_add_user(user_id: str):
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute('INSERT OR REPLACE INTO compact_users VALUES (?)', (user_id,))
+    conn.commit()
+    conn.close()
+
+def _db_remove_user(user_id: str):
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute('DELETE FROM compact_users WHERE user_id = ?', (user_id,))
+    conn.commit()
+    conn.close()
 
 # Read unsecure words from file
 with open('unsecure_words.txt') as f:
@@ -21,6 +48,13 @@ blocked_users = [x.strip() for x in blocked_users]
 
 # Initialize FastAPI
 app = FastAPI()
+
+@app.on_event('startup')
+async def startup():
+    global compact_users
+    loop = asyncio.get_running_loop()
+    compact_users = await loop.run_in_executor(None, _init_db)
+    logger.info(f'Loaded {len(compact_users)} compact-mode users from DB')
 
 # Initialize logging
 # logging.basicConfig(level=logging.INFO)
@@ -178,6 +212,20 @@ async def call_message(request: Request, authorization: str = Header(None)):
         response = "This is a console calculator using Python syntax. Just type your expression and get the result. For example: 2+2"
         bot.send_message(message['chat']['id'], response)
         return Response(content='ok', status_code=200)
+    # Mode toggle (private chat only)
+    if expression.startswith('/mode'):
+        if message['chat']['type'] == 'private':
+            user_id = str(message['from']['id'])
+            loop = asyncio.get_running_loop()
+            if user_id in compact_users:
+                compact_users.discard(user_id)
+                await loop.run_in_executor(None, _db_remove_user, user_id)
+                bot.send_message(message['chat']['id'], 'Mode: full\n14 = 5+9')
+            else:
+                compact_users.add(user_id)
+                await loop.run_in_executor(None, _db_add_user, user_id)
+                bot.send_message(message['chat']['id'], 'Mode: compact\n14')
+        return Response(content='ok', status_code=200)
     # Not private chat
     if not message['chat']['type'] == 'private':
         # logger.info(f"message: {message}")
@@ -199,8 +247,12 @@ async def call_message(request: Request, authorization: str = Header(None)):
         need_to_reply = True
    
     answer_max_lenght = 4095
-    res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]    
-    response = f'{res} = {expression}'
+    res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]
+    user_id = str(message['from']['id'])
+    if message['chat']['type'] == 'private' and user_id in compact_users:
+        response = res
+    else:
+        response = f'{res} = {expression}'
     logging.info(f'Sending message to chat id: {message["chat"]["id"]}, response: {response}')
     if need_to_reply:
         bot.send_message(message['chat']['id'], response, reply_to_message_id=message['message_id'])

@@ -21,3 +21,4 @@ services:
     volumes:
       - ./config.json:/server/config.json
       - ./logging.ini:/server/logging.ini
+      - ./data:/server/data
