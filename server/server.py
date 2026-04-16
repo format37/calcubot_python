@@ -220,11 +220,11 @@ async def call_message(request: Request, authorization: str = Header(None)):
             if user_id in compact_users:
                 compact_users.discard(user_id)
                 await loop.run_in_executor(None, _db_remove_user, user_id)
-                bot.send_message(message['chat']['id'], 'Mode: full\n14 = 5+9')
+                bot.send_message(message['chat']['id'], 'Mode: full')
             else:
                 compact_users.add(user_id)
                 await loop.run_in_executor(None, _db_add_user, user_id)
-                bot.send_message(message['chat']['id'], 'Mode: compact\n14')
+                bot.send_message(message['chat']['id'], 'Mode: compact')
         return Response(content='ok', status_code=200)
     # Not private chat
     if not message['chat']['type'] == 'private':
