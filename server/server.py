@@ -6,6 +6,7 @@ import logging
 from subprocess import Popen, PIPE, STDOUT
 import ast
 import telebot
+from telebot.apihelper import ApiTelegramException
 import json
 from re import findall, search, escape
 import sqlite3
@@ -68,6 +69,20 @@ with open('config.json') as config_file:
 # drop config_file
 config_file.close()
 # logger.info(f'Bot initialized: {bot}')
+
+
+def safe_send_message(chat_id, text, **kwargs):
+    """Send a Telegram message, swallowing expected delivery errors.
+
+    The common case is 403 'bot was blocked by the user' — e.g. a delayed or
+    retried update for someone who has since blocked the bot. Such errors must
+    not crash the request handler: otherwise FastAPI returns 500 and the update
+    gets re-delivered, re-processing the same expression in a loop.
+    """
+    try:
+        bot.send_message(chat_id, text, **kwargs)
+    except ApiTelegramException as e:
+        logger.info(f'send_message skipped for chat {chat_id}: {e.description}')
 
 
 async def is_complete_expression(expression):
@@ -196,7 +211,7 @@ async def call_message(request: Request, authorization: str = Header(None)):
 
 # Warm regards,
 # Alex"""
-#     bot.send_message(message['chat']['id'], response)
+#     safe_send_message(message['chat']['id'], response)
 #     return Response(content='ok', status_code=200)
 
     # Empty message
@@ -210,7 +225,7 @@ async def call_message(request: Request, authorization: str = Header(None)):
                             reply_to_message_id=str(message))"""
         # Send help message
         response = "This is a console calculator using Python syntax. Just type your expression and get the result. For example: 2+2"
-        bot.send_message(message['chat']['id'], response)
+        safe_send_message(message['chat']['id'], response)
         return Response(content='ok', status_code=200)
     # Mode toggle (private chat only)
     if expression.startswith('/mode'):
@@ -220,11 +235,11 @@ async def call_message(request: Request, authorization: str = Header(None)):
             if user_id in compact_users:
                 compact_users.discard(user_id)
                 await loop.run_in_executor(None, _db_remove_user, user_id)
-                bot.send_message(message['chat']['id'], 'Mode: full')
+                safe_send_message(message['chat']['id'], 'Mode: full')
             else:
                 compact_users.add(user_id)
                 await loop.run_in_executor(None, _db_add_user, user_id)
-                bot.send_message(message['chat']['id'], 'Mode: compact')
+                safe_send_message(message['chat']['id'], 'Mode: compact')
         return Response(content='ok', status_code=200)
     # Not private chat
     if not message['chat']['type'] == 'private':
@@ -255,9 +270,9 @@ async def call_message(request: Request, authorization: str = Header(None)):
         response = f'{res} = {expression}'
     logging.info(f'Sending message to chat id: {message["chat"]["id"]}, response: {response}')
     if need_to_reply:
-        bot.send_message(message['chat']['id'], response, reply_to_message_id=message['message_id'])
+        safe_send_message(message['chat']['id'], response, reply_to_message_id=message['message_id'])
     else:
-        bot.send_message(message['chat']['id'], response)
+        safe_send_message(message['chat']['id'], response)
     
     return Response(content='ok', status_code=200)
 
