@@ -1,4 +1,4 @@
-fastapi==0.118.2
+fastapi==0.138.2
 scipy==1.16.2
 matplotlib==3.10.7
 ipython==9.6.0
