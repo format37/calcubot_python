@@ -24,6 +24,11 @@ SANDBOX_GID = int(os.environ.get('SANDBOX_GID', '5000'))
 # Wall-clock ceiling for a single evaluation (CPU/memory are capped in-process).
 SANDBOX_WALL_TIMEOUT = 8
 
+# User-facing replies for the two empty-output cases. Never return '' — Telegram
+# rejects empty messages, so in compact mode an empty result arrives as nothing.
+TIMEOUT_MESSAGE = 'Timed out: the computation was too heavy (2-second limit)'
+NO_OUTPUT_MESSAGE = 'No output (the program did not produce a value)'
+
 def _init_db() -> set:
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
@@ -244,8 +249,18 @@ async def secure_eval(expression, mode):
         except TimeoutExpired:
             ExpressionOut.kill()
             ExpressionOut.communicate()
-            return 'Request timed out'
+            return TIMEOUT_MESSAGE
         result = stdout.decode("utf-8").replace('\n', ' ').strip()
+        # A negative return code means the sandbox was killed by a signal — almost
+        # always the CPU/memory limit on a heavy computation (e.g. 9999999**999999),
+        # which leaves no output. Report it rather than returning an empty string,
+        # which Telegram cannot send (so compact mode would deliver nothing at all).
+        if ExpressionOut.returncode is not None and ExpressionOut.returncode < 0:
+            return TIMEOUT_MESSAGE
+        # Clean exit but nothing printed: the program produced no value (e.g. an
+        # assignment or loop with no trailing expression). Still needs a body.
+        if result == '':
+            return NO_OUTPUT_MESSAGE
         # 3. Output filter - last line of defense against token leaks
         return filter_sensitive_output(result)
     else:
