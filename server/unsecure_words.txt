@@ -1,5 +1,4 @@
 exec
-import
 sys
 subprocess
 eval
@@ -7,15 +6,12 @@ open
 file
 write
 read
-print
 compile
 globals
 locals
 builtins
 getattr
-with
 token
-globals
 bot
 __
 os
@@ -40,7 +36,5 @@ popen
 vars
 code
 timeit
-fractions
-decimal
 ctypes
 inspect

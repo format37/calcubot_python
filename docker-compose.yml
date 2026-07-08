@@ -19,6 +19,6 @@ services:
     ports:
       - "8704:8000"
     volumes:
-      - ./config.json:/server/config.json
+      - ./config.json:/secrets/config.json:ro
       - ./logging.ini:/server/logging.ini
       - ./data:/server/data

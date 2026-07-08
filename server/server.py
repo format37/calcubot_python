@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request, Header, Response
 # from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse
 import logging
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
 import ast
 import telebot
 from telebot.apihelper import ApiTelegramException
@@ -15,6 +15,14 @@ import os
 
 DB_PATH = '/server/data/calcubot.db'
 compact_users: set = set()
+
+# Unprivileged identity the evaluation subprocess is dropped to (created in the
+# Dockerfile). The token lives in the root-only /secrets dir, so this user cannot
+# traverse to it and cannot read the bot token even if a filter is bypassed.
+SANDBOX_UID = int(os.environ.get('SANDBOX_UID', '5000'))
+SANDBOX_GID = int(os.environ.get('SANDBOX_GID', '5000'))
+# Wall-clock ceiling for a single evaluation (CPU/memory are capped in-process).
+SANDBOX_WALL_TIMEOUT = 8
 
 def _init_db() -> set:
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
@@ -64,7 +72,11 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 # logger.info('Logging started')
 
-with open('config.json') as config_file:
+# The token lives behind a root-only directory (see Dockerfile / compose) so the
+# dropped-privilege evaluation subprocess cannot reach it. Only this parent
+# process (root) reads it, at startup, into memory.
+CONFIG_PATH = os.environ.get('CONFIG_PATH', '/secrets/config.json')
+with open(CONFIG_PATH) as config_file:
     bot = telebot.TeleBot(json.load(config_file)['TOKEN'])
 # drop config_file
 config_file.close()
@@ -95,28 +107,81 @@ async def is_complete_expression(expression):
     except SyntaxError:
         return False
 
+# Modules a user program is allowed to import. Pure-computation stdlib only:
+# nothing that touches the filesystem, network, process, or reflection machinery.
+ALLOWED_IMPORTS = {
+    'math', 'cmath', 'statistics', 'fractions', 'decimal', 'random', 'datetime',
+    'itertools', 'functools', 'operator', 'collections', 're', 'json', 'string',
+    'bisect', 'heapq', 'numbers', 'array',
+}
+
+# Builtins that must never be *referenced* (in any position — not just called),
+# so that aliasing them past the filter under exec (e.g. ``o = open``) is blocked.
+# Includes operator's getattr/getitem/method primitives, which are string->attr
+# equivalents that would otherwise reconstruct __globals__/__builtins__ at runtime.
+DANGEROUS_NAMES = {
+    '__import__', 'exec', 'eval', 'compile', 'open', 'input',
+    'getattr', 'setattr', 'delattr', 'vars', 'dir', 'globals', 'locals',
+    'builtins', 'breakpoint', 'exit', 'quit', 'help', 'memoryview',
+    'attrgetter', 'methodcaller', 'itemgetter',
+}
+
+# Non-dunder introspection attributes that reach frames/globals/builtins (the
+# generator/coroutine frame gadget: ``(x for x in[1]).gi_frame.f_builtins``).
+# Blocked both as attribute access and inside string literals (str.format path).
+DANGEROUS_ATTRS = {
+    'gi_frame', 'gi_code', 'gi_yieldfrom', 'cr_frame', 'cr_code', 'cr_await',
+    'ag_frame', 'ag_code', 'ag_await', 'f_globals', 'f_builtins', 'f_locals',
+    'f_back', 'f_code', 'f_trace', 'tb_frame', 'tb_next', 'tb_lasti',
+    'func_globals', 'func_code',
+}
+
+
 def is_dangerous_ast(expression):
-    """AST-based security check - detects dangerous patterns at syntax level"""
-    DANGEROUS_NAMES = {'__import__', 'exec', 'eval', 'compile', 'open',
-                       'getattr', 'setattr', 'delattr', 'vars', 'dir',
-                       'globals', 'locals', 'builtins', 'input'}
+    """AST-based security check - detects dangerous patterns at syntax level.
+
+    Parses in ``exec`` mode so multi-statement programs (loops, assignments,
+    imports) are supported, and rejects, before anything runs:
+      * imports of modules outside ``ALLOWED_IMPORTS``;
+      * any reference to a dangerous builtin (blocks alias tricks like ``o=open``);
+      * any dunder identifier (name, attribute, argument, function/class name);
+      * string literals carrying ``__`` (blocks the ``str.format``/``%`` gadget
+        that reaches ``__globals__``/``__builtins__`` from inside a literal).
+    """
     try:
-        tree = ast.parse(expression, mode='eval')
+        tree = ast.parse(expression, mode='exec')
     except SyntaxError:
         return True  # Block invalid syntax
 
     for node in ast.walk(tree):
-        # Block dangerous function calls
-        if isinstance(node, ast.Call):
-            if isinstance(node.func, ast.Name) and node.func.id in DANGEROUS_NAMES:
+        # Import allowlist (import X / from X import ...)
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.split('.')[0] not in ALLOWED_IMPORTS:
+                    return True
+        elif isinstance(node, ast.ImportFrom):
+            if (node.module or '').split('.')[0] not in ALLOWED_IMPORTS:
                 return True
-            if isinstance(node.func, ast.Attribute) and node.func.attr in DANGEROUS_NAMES:
-                return True
-        # Block dunder attribute access (e.g., __class__, __bases__)
-        if isinstance(node, ast.Attribute) and node.attr.startswith('__'):
+        # Dangerous builtin referenced anywhere (call target, alias, argument, ...)
+        if isinstance(node, ast.Name) and node.id in DANGEROUS_NAMES:
             return True
-        # Block dunder names (e.g., __import__, __builtins__)
-        if isinstance(node, ast.Name) and node.id.startswith('__'):
+        # Dangerous method call by attribute (e.g. x.getattr(...))
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) \
+                and node.func.attr in DANGEROUS_NAMES:
+            return True
+        # Block introspection attributes that reach frames/globals/builtins
+        if isinstance(node, ast.Attribute) and node.attr in DANGEROUS_ATTRS:
+            return True
+        # Block every dunder identifier, whatever the node kind
+        for field in ('id', 'attr', 'arg', 'name'):
+            ident = getattr(node, field, None)
+            if isinstance(ident, str) and ident.startswith('__'):
+                return True
+        # Block dunders / introspection names hidden inside a string literal
+        # (the str.format / % gadget: "{0.gi_frame.f_builtins}".format(gen))
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) \
+                and ('__' in node.value
+                     or any(a in node.value for a in DANGEROUS_ATTRS)):
             return True
     return False
 
@@ -157,15 +222,30 @@ async def secure_eval(expression, mode):
     logger.info(f'expression original: {expression}')
     logger.info(f'expression to evaluate: {expression}')
     if await calcubot_security(expression):
-        ExpressionOut = Popen(
-            ['python3', 'calculate_'+mode+'.py', expression],
+        popen_kwargs = dict(
             stdout=PIPE,
             stderr=STDOUT,
-            cwd='sandbox',                              # Run in sandbox directory (no config.json there)
-            env={'PATH': '/usr/local/bin:/usr/bin'}  # Clean environment, no secrets inherited
+            cwd='sandbox',                                     # no config.json here
+            env={'PATH': '/usr/local/bin:/usr/bin',
+                 'PYTHONBREAKPOINT': '0',                      # never drop into pdb
+                 'HOME': '/tmp'},                              # dropped user has no home
         )
-        stdout, stderr = ExpressionOut.communicate()
-        result = stdout.decode("utf-8").replace('\n','')
+        # Drop privileges so the evaluation cannot read config.json (the bot
+        # token) even if every string filter is bypassed. Only possible when the
+        # server runs as root (i.e. inside the container); a no-op in local dev.
+        if hasattr(os, 'getuid') and os.getuid() == 0:
+            popen_kwargs['user'] = SANDBOX_UID
+            popen_kwargs['group'] = SANDBOX_GID
+            popen_kwargs['extra_groups'] = []
+        ExpressionOut = Popen(['python3', 'calculate_'+mode+'.py', expression],
+                              **popen_kwargs)
+        try:
+            stdout, stderr = ExpressionOut.communicate(timeout=SANDBOX_WALL_TIMEOUT)
+        except TimeoutExpired:
+            ExpressionOut.kill()
+            ExpressionOut.communicate()
+            return 'Request timed out'
+        result = stdout.decode("utf-8").replace('\n', ' ').strip()
         # 3. Output filter - last line of defense against token leaks
         return filter_sensitive_output(result)
     else:
