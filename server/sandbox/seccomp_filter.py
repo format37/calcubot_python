@@ -65,6 +65,11 @@ _DENY = {
 }
 
 
+def supported():
+    """True if this architecture has a denylist we know how to install."""
+    return platform.machine() in _DENY
+
+
 def _sock_filter(code, jt, jf, k):
     # struct sock_filter { __u16 code; __u8 jt; __u8 jf; __u32 k; }
     return struct.pack('HBBI', code, jt, jf, k)
