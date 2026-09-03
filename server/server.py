@@ -1,14 +1,14 @@
 from fastapi import FastAPI, Request, Header, Response
-# , HTTPException
-# from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse
+from contextlib import asynccontextmanager
 import logging
-from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
+from asyncio.subprocess import PIPE, STDOUT
 import ast
+import hmac
 import telebot
 from telebot.apihelper import ApiTelegramException
 import json
-from re import findall, search, escape
+from re import search, escape
 import sqlite3
 import asyncio
 import os
@@ -28,6 +28,48 @@ SANDBOX_WALL_TIMEOUT = 8
 # rejects empty messages, so in compact mode an empty result arrives as nothing.
 TIMEOUT_MESSAGE = 'Timed out: the computation was too heavy (2-second limit)'
 NO_OUTPUT_MESSAGE = 'No output (the program did not produce a value)'
+
+START_MESSAGE = (
+    "Hi! I'm a Python console calculator.\n"
+    "Send me any expression and I'll return the value of the final line.\n\n"
+    "Try:\n"
+    "  2 + 2\n"
+    "  math.sqrt(144)\n"
+    "  sum(x**2 for x in range(10))\n\n"
+    "Type /help for imports, multi-line programs, and limits."
+)
+
+HELP_MESSAGE = (
+    "CalcuBot - a Python console calculator.\n\n"
+    "BASICS\n"
+    "  Send an expression; the value of the final line comes back, REPL-style.\n"
+    "    2 + 2            -> 4\n"
+    "    (3.14 * 100) / 2 -> 157.0\n"
+    "    17 % 5           -> 2\n\n"
+    "READY TO USE (no import needed)\n"
+    "  math, random, dt (datetime), json, re\n"
+    "    math.factorial(10)\n"
+    "    random.randint(1, 100)\n\n"
+    "MULTI-LINE PROGRAMS & IMPORTS\n"
+    "  Full programs work; import from a math/data allowlist:\n"
+    "  math, cmath, statistics, fractions, decimal, random, datetime,\n"
+    "  itertools, functools, operator, collections, re, json, string,\n"
+    "  bisect, heapq, numbers, array.\n"
+    "    from fractions import Fraction\n"
+    "    Fraction(1, 3) + Fraction(1, 6)   -> 1/2\n\n"
+    "    total = 0\n"
+    "    for i in range(1, 6):\n"
+    "        total += i ** 2\n"
+    "    total                             -> 55\n\n"
+    "INLINE (any chat)\n"
+    "  Type  @calcubot 2**64  in any message box and pick a result.\n\n"
+    "COMMANDS\n"
+    "  /mode - toggle compact output in private chat (result only)\n"
+    "  /cl   - in groups, prefix your expression so I reply to your message\n\n"
+    "LIMITS\n"
+    "  2 s CPU, 512 MB memory, ~4000 chars of output per call.\n"
+    "  Sandboxed: no files, no network, no system access."
+)
 
 def _init_db() -> set:
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
@@ -60,15 +102,16 @@ with open('blocked_users.txt') as f:
     blocked_users = f.readlines()
 blocked_users = [x.strip() for x in blocked_users]
 
-# Initialize FastAPI
-app = FastAPI()
-
-@app.on_event('startup')
-async def startup():
+# Initialize FastAPI with a lifespan handler (modern Starlette; replaces on_event).
+@asynccontextmanager
+async def lifespan(app):
     global compact_users
     loop = asyncio.get_running_loop()
     compact_users = await loop.run_in_executor(None, _init_db)
     logger.info(f'Loaded {len(compact_users)} compact-mode users from DB')
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 # Initialize logging
 # logging.basicConfig(level=logging.INFO)
@@ -82,9 +125,13 @@ logger.setLevel(logging.INFO)
 # process (root) reads it, at startup, into memory.
 CONFIG_PATH = os.environ.get('CONFIG_PATH', '/secrets/config.json')
 with open(CONFIG_PATH) as config_file:
-    bot = telebot.TeleBot(json.load(config_file)['TOKEN'])
-# drop config_file
-config_file.close()
+    _config = json.load(config_file)
+bot = telebot.TeleBot(_config['TOKEN'])
+# Optional shared secret authenticating inbound update POSTs. Unset by default, so
+# the existing gateway keeps working unchanged; when set (env wins over config.json)
+# a matching Authorization header is required on /message and /inline.
+WEBHOOK_SECRET = os.environ.get('WEBHOOK_SECRET') or _config.get('WEBHOOK_SECRET') or ''
+del _config
 # logger.info(f'Bot initialized: {bot}')
 
 
@@ -193,7 +240,7 @@ def is_dangerous_ast(expression):
 def filter_sensitive_output(response):
     """Filter potential token leaks from output"""
     # Telegram bot token pattern: 123456789:ABC-DEF1234ghIkl-zyx57W2v1u123ew11
-    if search(r'\d{8,10}:[A-Za-z0-9_-]{35}', response):
+    if search(r'\d{6,}:[A-Za-z0-9_-]{32,}', response):
         return '[FILTERED]'
     return response
 
@@ -224,80 +271,51 @@ async def call_test():
     return JSONResponse(content={"status": "ok"})
 
 async def secure_eval(expression, mode):
-    logger.info(f'expression original: {expression}')
-    logger.info(f'expression to evaluate: {expression}')
-    if await calcubot_security(expression):
-        popen_kwargs = dict(
-            stdout=PIPE,
-            stderr=STDOUT,
-            cwd='sandbox',                                     # no config.json here
-            env={'PATH': '/usr/local/bin:/usr/bin',
-                 'PYTHONBREAKPOINT': '0',                      # never drop into pdb
-                 'HOME': '/tmp'},                              # dropped user has no home
-        )
-        # Drop privileges so the evaluation cannot read config.json (the bot
-        # token) even if every string filter is bypassed. Only possible when the
-        # server runs as root (i.e. inside the container); a no-op in local dev.
-        if hasattr(os, 'getuid') and os.getuid() == 0:
-            popen_kwargs['user'] = SANDBOX_UID
-            popen_kwargs['group'] = SANDBOX_GID
-            popen_kwargs['extra_groups'] = []
-        ExpressionOut = Popen(['python3', 'calculate_'+mode+'.py', expression],
-                              **popen_kwargs)
-        try:
-            stdout, stderr = ExpressionOut.communicate(timeout=SANDBOX_WALL_TIMEOUT)
-        except TimeoutExpired:
-            ExpressionOut.kill()
-            ExpressionOut.communicate()
-            return TIMEOUT_MESSAGE
-        result = stdout.decode("utf-8").replace('\n', ' ').strip()
-        # A negative return code means the sandbox was killed by a signal — almost
-        # always the CPU/memory limit on a heavy computation (e.g. 9999999**999999),
-        # which leaves no output. Report it rather than returning an empty string,
-        # which Telegram cannot send (so compact mode would deliver nothing at all).
-        if ExpressionOut.returncode is not None and ExpressionOut.returncode < 0:
-            return TIMEOUT_MESSAGE
-        # Clean exit but nothing printed: the program produced no value (e.g. an
-        # assignment or loop with no trailing expression). Still needs a body.
-        if result == '':
-            return NO_OUTPUT_MESSAGE
-        # 3. Output filter - last line of defense against token leaks
-        return filter_sensitive_output(result)
-    else:
+    logger.info(f'expression to evaluate: {expression!r}')
+    if not await calcubot_security(expression):
         return 'Request is not supported'
-
-def sequrity(user_input):
-    # functions = ["random"]
-
-    # Sequre symbols
-    s_s = "-+*/()"
-    # Sequre symbols regex
-    s_s_r = "[" + "".join(["\\" + s for s in s_s]) + "]"
-    # Sequre number regex
-    s_n_r = r"\d+.?\d*"
-
-    twisted_number_regex = rf"[{s_n_r}{s_s_r}?]?"
-    print(twisted_number_regex)
-
-    # user_input = "4 * 6"
-    user_secure_input = "".join(
-        findall(
-            twisted_number_regex,
-            user_input.replace(" ", ""),
-        )
+    subprocess_kwargs = dict(
+        stdout=PIPE,
+        stderr=STDOUT,
+        cwd='sandbox',                                     # no config.json here
+        env={'PATH': '/usr/local/bin:/usr/bin',
+             'PYTHONBREAKPOINT': '0',                      # never drop into pdb
+             'HOME': '/tmp'},                              # dropped user has no home
     )
-    return user_secure_input
-    # try:
-    #     bot_output = eval(user_secure_input)
-    # except Exception as e:
-    #     # log(e)
-    #     bot_output = "Irrational input!"
+    # Drop privileges so the evaluation cannot read config.json (the bot token)
+    # even if every string filter is bypassed. Only possible when the server runs
+    # as root (i.e. inside the container); a no-op in local dev.
+    if hasattr(os, 'getuid') and os.getuid() == 0:
+        subprocess_kwargs['user'] = SANDBOX_UID
+        subprocess_kwargs['group'] = SANDBOX_GID
+        subprocess_kwargs['extra_groups'] = []
+    # Async subprocess + await: a heavy or hung evaluation must not block the event
+    # loop (and thus every other user). Wall-clock is bounded here; CPU and memory
+    # are bounded in-process by the sandbox rlimits.
+    proc = await asyncio.create_subprocess_exec(
+        'python3', 'calculate_' + mode + '.py', expression, **subprocess_kwargs)
+    try:
+        stdout, _ = await asyncio.wait_for(proc.communicate(),
+                                           timeout=SANDBOX_WALL_TIMEOUT)
+    except asyncio.TimeoutError:
+        proc.kill()
+        await proc.communicate()
+        return TIMEOUT_MESSAGE
+    result = stdout.decode('utf-8').replace('\n', ' ').strip()
+    # A negative return code means the sandbox was killed by a signal - almost
+    # always the CPU/memory limit on a heavy computation, which leaves no output.
+    if proc.returncode is not None and proc.returncode < 0:
+        return TIMEOUT_MESSAGE
+    # Clean exit but nothing printed: the program produced no value.
+    if result == '':
+        return NO_OUTPUT_MESSAGE
+    # Last line of defense against token leaks.
+    return filter_sensitive_output(result)
 
-    # print(bot_output, "=", user_input)
-
-    
 @app.post("/message")
 async def call_message(request: Request, authorization: str = Header(None)):
+    if WEBHOOK_SECRET and not hmac.compare_digest(authorization or '', WEBHOOK_SECRET):
+        return Response(content='unauthorized', status_code=401)
     message = await request.json()
 #     response = """Hello,
 
@@ -314,13 +332,11 @@ async def call_message(request: Request, authorization: str = Header(None)):
         return Response(content='ok', status_code=200)
     expression = message['text']
     # Start or help
-    if expression.startswith('/start') or expression.startswith('/help'):
-        """link = 'https://rtlm.info/help.mp4'
-        bot.send_video(message.chat.id, link,
-                            reply_to_message_id=str(message))"""
-        # Send help message
-        response = "This is a console calculator using Python syntax. Just type your expression and get the result. For example: 2+2"
-        safe_send_message(message['chat']['id'], response)
+    if expression.startswith('/start'):
+        safe_send_message(message['chat']['id'], START_MESSAGE)
+        return Response(content='ok', status_code=200)
+    if expression.startswith('/help'):
+        safe_send_message(message['chat']['id'], HELP_MESSAGE)
         return Response(content='ok', status_code=200)
     # Mode toggle (private chat only)
     if expression.startswith('/mode'):
@@ -346,24 +362,34 @@ async def call_message(request: Request, authorization: str = Header(None)):
     #     # Exit from group
     #     logger.info(f"### ### ### Leaving group: {message['chat']['id']}: {bot.leave_chat(message['chat']['id'])}")
     #     return Response(content='ok', status_code=200)
+    # Some updates (anonymous admins, channel-as-sender, auto-forwards) carry no
+    # 'from'. Drop them instead of raising KeyError -> 500 -> gateway retry loop.
+    from_user = message.get('from')
+    if from_user is None:
+        return Response(content='ok', status_code=200)
+    user_id = str(from_user['id'])
     # Blocked user
-    if await is_blocked_user(str(message['from']['id'])):
+    if await is_blocked_user(user_id):
         return Response(content='ok', status_code=200)
     
     need_to_reply = False
-    # if /cl is in expression, replace /cl with ''
-    if '/cl' in expression:
-        expression = expression.replace('/cl', '').strip()
+    # /cl (optionally /cl@botname): reply directly to the user's message. Prefix
+    # match, not substring, so an expression that merely contains '/cl' stays intact.
+    if expression.startswith('/cl'):
+        rest = expression[3:]
+        if rest[:1] == '@':                # '/cl@botname ...'
+            parts = rest.split(None, 1)
+            rest = parts[1] if len(parts) > 1 else ''
+        expression = rest.strip()
         need_to_reply = True
    
-    answer_max_lenght = 4095
-    res = str(await secure_eval(expression, 'native'))[:answer_max_lenght]
-    user_id = str(message['from']['id'])
+    answer_max_length = 4095
+    res = str(await secure_eval(expression, 'native'))[:answer_max_length]
     if message['chat']['type'] == 'private' and user_id in compact_users:
         response = res
     else:
         response = f'{res} = {expression}'
-    logging.info(f'Sending message to chat id: {message["chat"]["id"]}, response: {response}')
+    logger.info(f'Sending message to chat {message["chat"]["id"]}: {response!r}')
     if need_to_reply:
         safe_send_message(message['chat']['id'], response, reply_to_message_id=message['message_id'])
     else:
@@ -375,6 +401,8 @@ async def call_message(request: Request, authorization: str = Header(None)):
 # Post inline query
 @app.post("/inline")
 async def call_inline(request: Request, authorization: str = Header(None)):
+    if WEBHOOK_SECRET and not hmac.compare_digest(authorization or '', WEBHOOK_SECRET):
+        return JSONResponse(content={"status": "unauthorized"}, status_code=401)
     message = await request.json()
     from_user_id = message['from_user_id']
     inline_query_id = message['inline_query_id']

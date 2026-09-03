@@ -29,12 +29,14 @@ import seccomp_filter
 # CPU time and address space so a single evaluation cannot exhaust the host.
 CPU_SECONDS = 2
 MEM_BYTES = 512 * 1024 * 1024  # 512 MiB
+FSIZE_BYTES = 16 * 1024 * 1024  # 16 MiB - cap file writes (e.g. into the /tmp tmpfs)
 
 
 def _apply_limits():
     try:
         resource.setrlimit(resource.RLIMIT_AS, (MEM_BYTES, MEM_BYTES))
         resource.setrlimit(resource.RLIMIT_CPU, (CPU_SECONDS, CPU_SECONDS))
+        resource.setrlimit(resource.RLIMIT_FSIZE, (FSIZE_BYTES, FSIZE_BYTES))
     except (ValueError, OSError):
         pass
 
@@ -56,7 +58,13 @@ def evaluate(source, extra_globals=None):
     # some language-level bypass, the kernel refuses network and process-spawn
     # syscalls. Best-effort — the token is already protected by the uid drop and
     # root-only /secrets, so a failed install degrades gracefully.
-    seccomp_filter.install()
+    installed = seccomp_filter.install()
+    if not installed and seccomp_filter.supported():
+        # Fail closed: the evaluator never legitimately needs network/exec/fork, so
+        # we refuse to run user code without the filter rather than silently lose
+        # containment. (Unsupported arches still degrade gracefully above.)
+        print('Error: sandbox initialization failed')
+        raise SystemExit(1)
     g = _base_globals(extra_globals)
     try:
         tree = ast.parse(source, mode='exec')

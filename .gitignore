@@ -3,3 +3,4 @@ vulnerability-test.md
 data/
 __pycache__/
 *.pyc
+docs/
