@@ -7,6 +7,7 @@ import ast
 import hmac
 import telebot
 from telebot.apihelper import ApiTelegramException
+from telebot.formatting import escape_markdown
 import json
 from re import search, escape
 import sqlite3
@@ -29,47 +30,52 @@ SANDBOX_WALL_TIMEOUT = 8
 TIMEOUT_MESSAGE = 'Timed out: the computation was too heavy (2-second limit)'
 NO_OUTPUT_MESSAGE = 'No output (the program did not produce a value)'
 
-START_MESSAGE = (
-    "Hi! I'm a Python console calculator.\n"
-    "Send me any expression and I'll return the value of the final line.\n\n"
-    "Try:\n"
-    "  2 + 2\n"
-    "  math.sqrt(144)\n"
-    "  sum(x**2 for x in range(10))\n\n"
-    "Type /help for imports, multi-line programs, and limits."
-)
+def _fmt(segments, md):
+    """Render (kind, text) segments to MarkdownV2 (md=True) or plain (md=False).
+    Prose is escaped with telebot's escape_markdown; 'code' goes in a fenced block
+    (monospace, only backslash/backtick escaped) so examples need no hand-escaping."""
+    out = []
+    for kind, text in segments:
+        if kind == 'code':
+            if md:
+                out.append('```\n' + text.replace('\\', '\\\\').replace('`', '\\`') + '\n```')
+            else:
+                out.append(text)
+        elif kind == 'bold':
+            out.append('*' + escape_markdown(text) + '*' if md else text)
+        else:
+            out.append(escape_markdown(text) if md else text)
+    return '\n'.join(out)
 
-HELP_MESSAGE = (
-    "CalcuBot - a Python console calculator.\n\n"
-    "BASICS\n"
-    "  Send an expression; the value of the final line comes back, REPL-style.\n"
-    "    2 + 2            -> 4\n"
-    "    (3.14 * 100) / 2 -> 157.0\n"
-    "    17 % 5           -> 2\n\n"
-    "READY TO USE (no import needed)\n"
-    "  math, random, dt (datetime), json, re\n"
-    "    math.factorial(10)\n"
-    "    random.randint(1, 100)\n\n"
-    "MULTI-LINE PROGRAMS & IMPORTS\n"
-    "  Full programs work; import from a math/data allowlist:\n"
-    "  math, cmath, statistics, fractions, decimal, random, datetime,\n"
-    "  itertools, functools, operator, collections, re, json, string,\n"
-    "  bisect, heapq, numbers, array.\n"
-    "    from fractions import Fraction\n"
-    "    Fraction(1, 3) + Fraction(1, 6)   -> 1/2\n\n"
-    "    total = 0\n"
-    "    for i in range(1, 6):\n"
-    "        total += i ** 2\n"
-    "    total                             -> 55\n\n"
-    "INLINE (any chat)\n"
-    "  Type  @calcubot 2**64  in any message box and pick a result.\n\n"
-    "COMMANDS\n"
-    "  /mode - toggle compact output in private chat (result only)\n"
-    "  /cl   - in groups, prefix your expression so I reply to your message\n\n"
-    "LIMITS\n"
-    "  2 s CPU, 512 MB memory, ~4000 chars of output per call.\n"
-    "  Sandboxed: no files, no network, no system access."
-)
+
+_START_SEGMENTS = [
+    ('text', "Hi! I'm a Python console calculator. Send me any expression and I'll return the value of the final line."),
+    ('text', 'Try:'),
+    ('code', '2 + 2\nmath.sqrt(144)\nsum(x**2 for x in range(10))'),
+    ('text', 'Send /help for imports and multi-line programs.'),
+]
+
+_HELP_SEGMENTS = [
+    ('bold', 'CalcuBot - a Python console calculator'),
+    ('text', 'Send an expression; the value of the final line comes back, REPL-style.'),
+    ('code', '2 + 2\n(3.14 * 100) / 2\n17 % 5'),
+    ('bold', 'Ready to use (no import needed)'),
+    ('text', 'math, random, dt (datetime), json, re'),
+    ('code', 'math.factorial(10)\nrandom.randint(1, 100)'),
+    ('bold', 'Multi-line programs & imports'),
+    ('text', 'Full programs work. Import from a math/data allowlist: math, cmath, statistics, fractions, decimal, random, datetime, itertools, functools, operator, collections, re, json, string, bisect, heapq, numbers, array.'),
+    ('code', 'from fractions import Fraction\nFraction(1, 3) + Fraction(1, 6)'),
+    ('code', 'total = 0\nfor i in range(1, 6):\n    total += i ** 2\ntotal'),
+    ('bold', 'Inline (any chat)'),
+    ('text', 'Type  @calcubot 2**64  in any message box and pick a result.'),
+    ('bold', 'Commands'),
+    ('text', '/mode - toggle compact output in private chat (result only)\n/cl - in groups, prefix your expression so I reply to your message'),
+]
+
+START_MESSAGE_MD = _fmt(_START_SEGMENTS, md=True)
+START_MESSAGE_PLAIN = _fmt(_START_SEGMENTS, md=False)
+HELP_MESSAGE_MD = _fmt(_HELP_SEGMENTS, md=True)
+HELP_MESSAGE_PLAIN = _fmt(_HELP_SEGMENTS, md=False)
 
 def _init_db() -> set:
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
@@ -147,6 +153,16 @@ def safe_send_message(chat_id, text, **kwargs):
         bot.send_message(chat_id, text, **kwargs)
     except ApiTelegramException as e:
         logger.info(f'send_message skipped for chat {chat_id}: {e.description}')
+
+
+def safe_send_markdown(chat_id, md_text, plain_text, **kwargs):
+    """Send MarkdownV2; on a parse/delivery error fall back to plain text so a
+    formatting slip can never blank the message."""
+    try:
+        bot.send_message(chat_id, md_text, parse_mode='MarkdownV2', **kwargs)
+    except ApiTelegramException as e:
+        logger.info(f'MarkdownV2 send failed for chat {chat_id}: {e.description}; plain fallback')
+        safe_send_message(chat_id, plain_text, **kwargs)
 
 
 async def is_complete_expression(expression):
@@ -333,10 +349,10 @@ async def call_message(request: Request, authorization: str = Header(None)):
     expression = message['text']
     # Start or help
     if expression.startswith('/start'):
-        safe_send_message(message['chat']['id'], START_MESSAGE)
+        safe_send_markdown(message['chat']['id'], START_MESSAGE_MD, START_MESSAGE_PLAIN)
         return Response(content='ok', status_code=200)
     if expression.startswith('/help'):
-        safe_send_message(message['chat']['id'], HELP_MESSAGE)
+        safe_send_markdown(message['chat']['id'], HELP_MESSAGE_MD, HELP_MESSAGE_PLAIN)
         return Response(content='ok', status_code=200)
     # Mode toggle (private chat only)
     if expression.startswith('/mode'):
