@@ -51,8 +51,8 @@ FastAPI server (server/server.py)
 ```
 
 Evaluation pipeline (in `secure_eval`):
-1. **AST analysis** (`is_dangerous_ast`) — parses in `exec` mode and rejects, before anything runs: imports outside `ALLOWED_IMPORTS`; any reference to a `DANGEROUS_NAMES` builtin (in *any* position, so aliasing like `o = open` is caught); any `__dunder__` identifier (name/attr/arg/func/class); and string literals containing `__` (the `str.format`/`%` → `__globals__` gadget).
-2. **Unicode decode + regex blocklist** (`calcubot_security`) — normalises `\uXXXX` escapes then checks against `server/unsecure_words.txt` (secondary tripwire).
+1. **AST analysis** (`is_dangerous_ast`) — parses in `exec` mode and rejects, before anything runs: imports outside `ALLOWED_IMPORTS`; any reference to a `DANGEROUS_NAMES` builtin (in *any* position, so aliasing like `o = open` is caught); any `__dunder__` or non-ASCII identifier (name/attr/arg/func/class — Python NFKC-folds homoglyphs like `ｏｐｅｎ` to `open`, so they are rejected outright); and string literals containing `__` (the `str.format`/`%` → `__globals__` gadget).
+2. **Unicode decode + regex blocklist** (`calcubot_security`) — normalises `\uXXXX` escapes (via `latin-1`+`backslashreplace`, so non-ASCII text is not mangled), NFKC-folds homoglyphs, then checks against `server/unsecure_words.txt` (secondary tripwire).
 3. **Privilege-dropped, seccomp-filtered sandbox subprocess** — `python3 calculate_native.py <src>` (or `calculate_inline.py`) is spawned with `cwd='sandbox/'`, a clean env (`PATH`, `PYTHONBREAKPOINT=0`, `HOME=/tmp`), and — when the server runs as root — `user=5000, group=5000` so it cannot read `/secrets/config.json`. A wall-clock `communicate(timeout=8)` kills hung runs.
 4. **Output filter** (`filter_sensitive_output`) — redacts any Telegram bot token pattern from the response.
 
@@ -64,6 +64,7 @@ Defense-in-depth is intentional — `prompt.md` documents the original design ph
 
 Key invariants to maintain:
 - The token file must stay behind the root-only `/secrets/` dir, mounted read-only; the sandbox subprocess must keep dropping to an unprivileged uid.
+- `/server/data` (the compact-users DB) must stay mode 0700 — `_init_db` enforces it at startup. Seccomp deliberately allows file reads, so anything world-readable is readable by user code; nothing non-public may be world-readable.
 - `calc_core.py` must install the seccomp filter **before** running user code; the filter must keep denying network + exec/fork syscalls. This is the load-bearing containment — do not weaken it on the assumption the string filters will catch everything (they cannot).
 - `ALLOWED_IMPORTS` must contain **only** pure-computation modules — never anything that touches the filesystem, network, process, or reflection (`os`, `sys`, `io`, `subprocess`, `importlib`, `ctypes`, `socket`, `pickle`, `inspect`, …).
 - The AST check runs **before** the subprocess and must keep blocking: dangerous-name references anywhere (incl. `operator.attrgetter`/`itemgetter`/`methodcaller`), all `__dunder__` identifiers, the frame/generator introspection attrs in `DANGEROUS_ATTRS`, and `__`/introspection-bearing string literals.
