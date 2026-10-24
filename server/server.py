@@ -13,6 +13,7 @@ from re import search, escape
 import sqlite3
 import asyncio
 import os
+import unicodedata
 
 DB_PATH = '/server/data/calcubot.db'
 compact_users: set = set()
@@ -84,7 +85,14 @@ HELP_MESSAGE_MD = _fmt(_HELP_SEGMENTS, md=True)
 HELP_MESSAGE_PLAIN = _fmt(_HELP_SEGMENTS, md=False)
 
 def _init_db() -> set:
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    db_dir = os.path.dirname(DB_PATH)
+    os.makedirs(db_dir, exist_ok=True)
+    # The sandbox uid can read any world-readable file, so keep the user DB (and
+    # sqlite's journal files next to it) in a root-only directory.
+    try:
+        os.chmod(db_dir, 0o700)
+    except OSError as e:
+        logger.warning(f'Could not restrict {db_dir} to 0700: {e}')
     conn = sqlite3.connect(DB_PATH)
     conn.execute('CREATE TABLE IF NOT EXISTS compact_users (user_id TEXT PRIMARY KEY)')
     conn.commit()
@@ -219,6 +227,7 @@ def is_dangerous_ast(expression):
       * imports of modules outside ``ALLOWED_IMPORTS``;
       * any reference to a dangerous builtin (blocks alias tricks like ``o=open``);
       * any dunder identifier (name, attribute, argument, function/class name);
+      * any non-ASCII identifier (homoglyph tricks like fullwidth/math letters);
       * string literals carrying ``__`` (blocks the ``str.format``/``%`` gadget
         that reaches ``__globals__``/``__builtins__`` from inside a literal).
     """
@@ -246,10 +255,11 @@ def is_dangerous_ast(expression):
         # Block introspection attributes that reach frames/globals/builtins
         if isinstance(node, ast.Attribute) and node.attr in DANGEROUS_ATTRS:
             return True
-        # Block every dunder identifier, whatever the node kind
+        # Block every dunder or non-ASCII identifier, whatever the node kind
         for field in ('id', 'attr', 'arg', 'name'):
             ident = getattr(node, field, None)
-            if isinstance(ident, str) and ident.startswith('__'):
+            if isinstance(ident, str) and (ident.startswith('__')
+                                           or not ident.isascii()):
                 return True
         # Block dunders / introspection names hidden inside a string literal
         # (the str.format / % gadget: "{0.gi_frame.f_builtins}".format(gen))
@@ -273,9 +283,14 @@ async def calcubot_security(request):
 
     # 2. Regex blocklist (catches string patterns)
     try:
-        decoded = request.encode('utf-8').decode('unicode_escape')
+        # backslashreplace keeps non-latin-1 chars intact (as \uXXXX, decoded right
+        # back); a plain utf-8 encode would turn them into latin-1 mojibake.
+        decoded = request.encode('latin-1', 'backslashreplace').decode('unicode_escape')
     except:
         decoded = request  # fallback if decode fails
+    # Fold homoglyphs (fullwidth / mathematical letters) to their ASCII form, as
+    # Python itself does for identifiers, so e.g. 'ｏｓ' matches the 'os' entry.
+    decoded = unicodedata.normalize('NFKC', decoded)
 
     for word in calcubot_unsecure_words:
         # Use word boundary matching to avoid false positives
